@@ -1,20 +1,20 @@
-from enum import IntEnum, unique
+# from enum import IntEnum, unique
 import operator
 import inp
 
 
-@unique
-class CardType(IntEnum):
-    NoneCard = 0,
-    HighCard = 1,  # 高牌
-    Double_OneCard = 2,  # 一对
-    Double_TwoCard = 3,  # 二对
-    ThreeCard = 4,  # 三条
-    StraightCard = 6,  # 顺子
-    FlushCard = 7,  # 同花
-    GourdCard = 8,  # 三条加对子（葫芦）
-    FourCard = 9,  # 四条
-    StraightFlush = 10,  # 同花顺
+# @unique
+class CardType:
+    NoneCard = 0
+    HighCard = 1  # 高牌
+    Double_OneCard = 2  # 一对
+    Double_TwoCard = 3  # 二对
+    ThreeCard = 4  # 三条
+    StraightCard = 6  # 顺子
+    FlushCard = 7  # 同花
+    GourdCard = 8  # 三条加对子（葫芦）
+    FourCard = 9  # 四条
+    StraightFlush = 10  # 同花顺
     RoyalFlush = 11  # 皇家同花顺
 
 
@@ -73,7 +73,7 @@ class Cards:
 
         self.card_dict = card_dict
         self.card_type = None
-        self.score = self.ini_score_in_eq_case()
+        self.score = 0
 
     def ini_score_in_eq_case(self):
         score = 0
@@ -82,7 +82,7 @@ class Cards:
             for i in range(num):
                 score = score * CARD_BIT + card
 
-        return score
+        self.score += score
 
 
 class BaseCompare:
@@ -95,6 +95,7 @@ class BaseCompare:
 
 
 class FiveCardsComapre(BaseCompare):
+
     def compare(self, cards1: Cards, cards2: Cards):
         self.judge_card_type(cards1)
         self.judge_card_type(cards2)
@@ -103,6 +104,8 @@ class FiveCardsComapre(BaseCompare):
         elif cards1.card_type < cards2.card_type:
             return 2
         else:
+            cards1.ini_score_in_eq_case()
+            cards2.ini_score_in_eq_case()
             if cards1.score > cards2.score:
                 return 1
             elif cards1.score < cards2.score:
