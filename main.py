@@ -88,7 +88,7 @@ class Cards:
 class BaseCompare:
     def compare(self, cards1: Cards, cards2: Cards):
         '''
-        return compare result of two pairs of cards, 
+        return compare result of two pairs of cards,
         if cards1 is bigger, return true, otherwise return false
         '''
         raise NotImplementedError
@@ -143,6 +143,7 @@ class FiveCardsComapre(BaseCompare):
             return True
         if SPECIAL_STAIGHT.issubset(cards.card_dict.keys()):
             cards.score = (cards.score - CARD_A_PART) * CARD_BIT + 1
+            cards.max = 0
             return True
         return False
 
