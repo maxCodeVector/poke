@@ -1,9 +1,13 @@
-# from enum import IntEnum, unique
 import operator
-import inp
+import json
 
 
-# @unique
+def loadFont(path):
+    f = open(path, encoding='utf-8')
+    setting = json.load(f)
+    return setting
+
+
 class CardType:
     NoneCard = 0
     HighCard = 1  # 高牌
@@ -17,12 +21,6 @@ class CardType:
     StraightFlush = 10  # 同花顺
     RoyalFlush = 11  # 皇家同花顺
 
-
-scores = [
-    1000,
-    500,
-    100,
-]
 
 CARD_TABLE = {
     "2": 2,
@@ -153,7 +151,7 @@ class FiveCardsComapre(BaseCompare):
 
 if __name__ == "__main__":
 
-    t = inp.loadFont("poke/result.json")["matches"]
+    t = loadFont("result.json")["matches"]
     compartor: BaseCompare
     compartor = FiveCardsComapre()
 
