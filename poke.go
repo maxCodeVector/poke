@@ -10,13 +10,13 @@ import (
 )
 
 type Game struct {
-	alice  string
-	bob    string
-	result int
+	Alice  string
+	Bob    string
+	Result int
 }
 
 type Record struct {
-	matches *[]Game
+	Matches *[]Game
 }
 
 const (
@@ -65,11 +65,12 @@ type Cards struct {
 	score int
 }
 
-func(c Cards) NewCards(cards string)  {
+func(c *Cards) NewCards(cards string)  {
 	c.max = 0
 	c.min = 100
 	c.isFlush = true
 	c.score = 0
+	c.cardMap = make(map[int]int)
 	preColor := CARD_TABLE[string(cards[1])]
 	for i := 0; i < len(cards); i+=2 {
 		cardNum := CARD_TABLE[string(cards[i])]
@@ -90,14 +91,14 @@ func(c Cards) NewCards(cards string)  {
 	}
 }
 
+type kv struct {
+	Key   int
+	Value int
+}
 
-func (c Cards) iniScoreInEqualCase() {
+
+func (c *Cards) iniScoreInEqualCase() {
 	score := 0
-	type kv struct {
-		Key   int
-		Value int
-	}
-
 	var ss []kv
 	for k, v := range c.cardMap {
 		ss = append(ss, kv{k, v})
@@ -106,7 +107,7 @@ func (c Cards) iniScoreInEqualCase() {
 	sort.Slice(ss, func(i, j int) bool {
 		if ss[i].Value > ss[j].Value{
 			return true
-		}else if ss[i].Value == ss[j].Value && ss[i].Key > ss[i].Key{
+		}else if ss[i].Value == ss[j].Value && ss[i].Key > ss[j].Key{
 			return true
 		}
 		return false
@@ -132,7 +133,7 @@ func loadFont(fileName string) *[] Game {
 	if err != nil {
 		return nil
 	}
-	return record.matches
+	return record.Matches
 
 }
 
@@ -140,11 +141,11 @@ type Comparator struct {
 }
 
 type BaseComparator interface {
-	compare(cards1, cards2 Cards) int
+	compare(cards1, cards2 *Cards) int
 }
 
 
-func (comp Comparator) compare(cards1, cards2 Cards) int{
+func (comp Comparator) compare(cards1, cards2 *Cards) int{
 	comp.judge_cardType(cards1)
 	comp.judge_cardType(cards2)
 	if cards1.cardType > cards2.cardType {
@@ -164,7 +165,7 @@ func (comp Comparator) compare(cards1, cards2 Cards) int{
 	}
 }
 
-func (comp Comparator)judge_cardType(cards Cards) {
+func (comp Comparator)judge_cardType(cards *Cards) {
 	if len(cards.cardMap) == 5 {
 		comp.judgeStraightType(cards)
 	}else if len(cards.cardMap) == 4{
@@ -210,8 +211,8 @@ func maxValueOfMap(m *map[int]int) int {
 }
 
 
-func (comp Comparator) judgeStraightType(cards Cards) {
-	if comp.baseJudgeStaight(cards) {
+func (comp Comparator) judgeStraightType(cards *Cards) {
+	if !comp.baseJudgeStaight(cards) {
 		cards.cardType = HighCard
 	}else if !cards.isFlush {
 		cards.cardType = StraightCard
@@ -222,7 +223,7 @@ func (comp Comparator) judgeStraightType(cards Cards) {
 	}
 }
 
-func( comp Comparator) baseJudgeStaight(cards Cards)bool{
+func( comp Comparator) baseJudgeStaight(cards *Cards)bool{
 	if cards.max-cards.min == 4 {
 		return true
 	}
@@ -246,17 +247,17 @@ func isKeysInKeys(l *[]int, m *map[int]int) bool {
 }
 
 func main() {
-	t := loadFont("result.json")
+	t := loadFont("test_file/result.json")
 	var comparator BaseComparator
 	comparator = Comparator{}
 
+	var aliceCard Cards
+	var bobCard Cards
 	for _, game := range *t {
-		var aliceCard Cards
-		var bobCard Cards
-		aliceCard.NewCards(game.alice)
-		bobCard.NewCards(game.bob)
-		res := comparator.compare(aliceCard, bobCard)
-		if res != game.result{
+		aliceCard.NewCards(game.Alice)
+		bobCard.NewCards(game.Bob)
+		res := comparator.compare(&aliceCard, &bobCard)
+		if res != game.Result{
 			os.Exit(-1)
 		}
 

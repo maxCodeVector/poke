@@ -151,7 +151,7 @@ class FiveCardsComapre(BaseCompare):
 
 if __name__ == "__main__":
 
-    t = loadFont("result.json")["matches"]
+    t = loadFont("test_file/result.json")["matches"]
     compartor: BaseCompare
     compartor = FiveCardsComapre()
 
