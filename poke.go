@@ -6,7 +6,20 @@ import (
 	"io/ioutil"
 	"math"
 	"sort"
+	"runtime"
+	"time"
+	"os"
 )
+
+type Game struct {
+	Alice  string
+	Bob    string
+	Result int
+}
+
+type Record struct {
+	Matches *[]Game
+}
 
 const (
 	NoneCard       = 0
@@ -45,16 +58,6 @@ var SPECIAL_STAIGHT = []int{2, 3, 4, 5, 14}
 var CARD_BIT = 16
 var CARD_A_PART = CARD_TABLE["A"] * int(math.Pow(16, 4))
 
-type Game struct {
-	Alice  string
-	Bob    string
-	Result int
-}
-
-type Record struct {
-	Matches *[]Game
-}
-
 func loadJsonFile(fileName string) *[] Game {
 
 	data, err := ioutil.ReadFile(fileName)
@@ -79,7 +82,7 @@ type Cards struct {
 	score    int
 }
 
-func NewCards(c *Cards, cards string) {
+func(c *Cards) NewCards(cards string)  {
 	c.max = 0
 	c.min = 100
 	c.isFlush = true
@@ -110,9 +113,9 @@ type kv struct {
 	Value int
 }
 
+
 func (c *Cards) iniScoreInEqualCase() {
 	score := 0
-
 	var ss []kv
 	for k, v := range c.cardMap {
 		ss = append(ss, kv{k, v})
@@ -121,7 +124,7 @@ func (c *Cards) iniScoreInEqualCase() {
 	sort.Slice(ss, func(i, j int) bool {
 		if ss[i].Value > ss[j].Value {
 			return true
-		} else if ss[i].Value == ss[j].Value && ss[i].Key > ss[j].Key {
+		}else if ss[i].Value == ss[j].Value && ss[i].Key > ss[j].Key{
 			return true
 		}
 		return false
@@ -135,6 +138,22 @@ func (c *Cards) iniScoreInEqualCase() {
 	c.score += score
 }
 
+
+func loadFont(fileName string) *[] Game {
+
+	data, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		panic("path error")
+	}
+	var record Record
+	err = json.Unmarshal(data, &record)
+	if err != nil {
+		return nil
+	}
+	return record.Matches
+
+}
+
 type Comparator struct {
 }
 
@@ -142,9 +161,10 @@ type BaseComparator interface {
 	compare(cards1, cards2 *Cards) int
 }
 
-func (comp *Comparator) compare(cards1, cards2 *Cards) int {
-	comp.judgeCardType(cards1)
-	comp.judgeCardType(cards2)
+
+func (comp *Comparator) compare(cards1, cards2 *Cards) int{
+	comp.judge_cardType(cards1)
+	comp.judge_cardType(cards2)
 	if cards1.cardType > cards2.cardType {
 		return 1
 	} else if cards1.cardType < cards2.cardType {
@@ -162,7 +182,7 @@ func (comp *Comparator) compare(cards1, cards2 *Cards) int {
 	}
 }
 
-func (comp *Comparator) judgeCardType(cards *Cards) {
+func (comp *Comparator)judge_cardType(cards *Cards) {
 	if len(cards.cardMap) == 5 {
 		comp.judgeStraightType(cards)
 	} else if len(cards.cardMap) == 4 {
@@ -207,8 +227,9 @@ func maxValueOfMap(m *map[int]int) int {
 	return maxV
 }
 
+
 func (comp *Comparator) judgeStraightType(cards *Cards) {
-	if !comp.baseJudgeStraight(cards) {
+	if !comp.baseJudgeStaight(cards) {
 		cards.cardType = HighCard
 	} else if !cards.isFlush {
 		cards.cardType = StraightCard
@@ -219,7 +240,7 @@ func (comp *Comparator) judgeStraightType(cards *Cards) {
 	}
 }
 
-func (comp *Comparator) baseJudgeStraight(cards *Cards) bool {
+func( comp *Comparator) baseJudgeStaight(cards *Cards)bool{
 	if cards.max-cards.min == 4 {
 		return true
 	}
@@ -243,46 +264,37 @@ func isKeysInKeys(l *[]int, m *map[int]int) bool {
 }
 
 func main() {
-	t := loadJsonFile("test_file/result.json")
+	startTime := time.Now().UnixNano()   //纳秒
+	t := loadFont("test_file/result.json")
 	//var comparator BaseComparator
 	comparator := Comparator{}
-	const threadNum = 4
+	const threadNum = 2
+	runtime.GOMAXPROCS(threadNum)
 
-	var aliceCard Cards
-	var bobCard Cards
-	for _, game := range (*t) {
-		NewCards(&aliceCard, game.Alice)
-		NewCards(&bobCard, game.Bob)
-		res := comparator.compare(&aliceCard, &bobCard)
-		if res != game.Result {
-			panic("I am panic")
-		}
+	var flags [threadNum]chan int
+	for x:=0;x<threadNum;x++ {
+		flags[x] = make(chan int)
+		start := x * len(*t) / threadNum
+		end := min2int(start + len(*t) / threadNum, len(*t))
+		go thread(t, &comparator, start, end, flags[x])
 	}
+	fmt.Printf("time: %d, cpu: %d, go thread: %d\n",  time.Now().UnixNano() -startTime, runtime.NumCPU(), runtime.NumGoroutine())
+	for x:=0;x<threadNum;x++ {
+		<- flags[x]
+	}
+	fmt.Print("Are you happy?\n")
 
-	//runtime.GOMAXPROCS(threadNum)
-	//
-	//var flag [threadNum]chan int
-	//for x := 0; x < threadNum; x++ {
-	//	start := x * len(*t) / threadNum
-	//	end := max2int((x+1)*len(*t)/threadNum, len(*t))
-	//	flag[x] = make(chan int)
-	//	go thread(t, &comparator, start, end, flag[x])
-	//}
-	//for x := 0; x < threadNum; x++ {
-	//	<-flag[x]
-	//}
-	fmt.Printf("%d Thread, are you happy?\n", threadNum)
 }
 
-func thread(t *[]Game, comparator *Comparator, start int, end int, flag chan int) {
+func thread(t *[]Game, comparator *Comparator,  start int, end int, flag chan int) {
 	var aliceCard Cards
 	var bobCard Cards
 	for _, game := range (*t)[start:end] {
-		NewCards(&aliceCard, game.Alice)
-		NewCards(&bobCard, game.Bob)
+		aliceCard.NewCards(game.Alice)
+		bobCard.NewCards(game.Bob)
 		res := comparator.compare(&aliceCard, &bobCard)
 		if res != game.Result {
-			panic("I am panic")
+			os.Exit(-1)
 		}
 	}
 	flag <- 1
