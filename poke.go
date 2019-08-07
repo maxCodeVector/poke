@@ -7,6 +7,8 @@ import (
 	"math"
 	"os"
 	"sort"
+	"runtime"
+	"time"
 )
 
 type Game struct {
@@ -145,7 +147,7 @@ type BaseComparator interface {
 }
 
 
-func (comp Comparator) compare(cards1, cards2 *Cards) int{
+func (comp *Comparator) compare(cards1, cards2 *Cards) int{
 	comp.judge_cardType(cards1)
 	comp.judge_cardType(cards2)
 	if cards1.cardType > cards2.cardType {
@@ -165,7 +167,7 @@ func (comp Comparator) compare(cards1, cards2 *Cards) int{
 	}
 }
 
-func (comp Comparator)judge_cardType(cards *Cards) {
+func (comp *Comparator)judge_cardType(cards *Cards) {
 	if len(cards.cardMap) == 5 {
 		comp.judgeStraightType(cards)
 	}else if len(cards.cardMap) == 4{
@@ -211,7 +213,7 @@ func maxValueOfMap(m *map[int]int) int {
 }
 
 
-func (comp Comparator) judgeStraightType(cards *Cards) {
+func (comp *Comparator) judgeStraightType(cards *Cards) {
 	if !comp.baseJudgeStaight(cards) {
 		cards.cardType = HighCard
 	}else if !cards.isFlush {
@@ -223,7 +225,7 @@ func (comp Comparator) judgeStraightType(cards *Cards) {
 	}
 }
 
-func( comp Comparator) baseJudgeStaight(cards *Cards)bool{
+func( comp *Comparator) baseJudgeStaight(cards *Cards)bool{
 	if cards.max-cards.min == 4 {
 		return true
 	}
@@ -247,22 +249,39 @@ func isKeysInKeys(l *[]int, m *map[int]int) bool {
 }
 
 func main() {
+	startTime := time.Now().UnixNano()   //纳秒
 	t := loadFont("test_file/result.json")
-	var comparator BaseComparator
-	comparator = Comparator{}
+	//var comparator BaseComparator
+	comparator := Comparator{}
+	const threadNum = 2
+	runtime.GOMAXPROCS(threadNum)
 
+	var flags [threadNum]chan int
+	for x:=0;x<threadNum;x++ {
+		flags[x] = make(chan int)
+		start := x * len(*t) / threadNum
+		end := min2int(start + len(*t) / threadNum, len(*t))
+		go thread(t, &comparator, start, end, flags[x])
+	}
+	fmt.Printf("time: %d, cpu: %d, go thread: %d\n",  time.Now().UnixNano() -startTime, runtime.NumCPU(), runtime.NumGoroutine())
+	for x:=0;x<threadNum;x++ {
+		<- flags[x]
+	}
+	fmt.Print("Are you happy?\n")
+
+}
+
+func thread(t *[]Game, comparator *Comparator,  start int, end int, flag chan int) {
 	var aliceCard Cards
 	var bobCard Cards
-	for _, game := range *t {
+	for _, game := range (*t)[start:end] {
 		aliceCard.NewCards(game.Alice)
 		bobCard.NewCards(game.Bob)
 		res := comparator.compare(&aliceCard, &bobCard)
-		if res != game.Result{
+		if res != game.Result {
 			os.Exit(-1)
 		}
 
 	}
-
-	fmt.Print("Are you happy?\n")
-
+	flag <- 1
 }
