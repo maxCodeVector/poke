@@ -142,15 +142,15 @@ func (ss ByKey) Less(i, j int) bool { return ss[i].Key > ss[j].Key }
 
 func (c *Cards) iniScoreInEqualCase() {
 	score := 0
-	if c.finalCards == nil{
-		var ss []kv = make([]kv, 0, len(c.cardMap))
-		for k, v := range c.cardMap {
-			ss = append(ss, kv{k, v})
-		}
+	// if c.finalCards == nil{
+	// 	var ss []kv = make([]kv, 0, len(c.cardMap))
+	// 	for k, v := range c.cardMap {
+	// 		ss = append(ss, kv{k, v})
+	// 	}
 
-		sort.Sort(ByValue(ss))
-		c.finalCards = &ss
-	}
+	// 	sort.Sort(ByValue(ss))
+	// 	c.finalCards = &ss
+	// }
 	// Slice(ss, func(i, j int) bool {
 	// 	if ss[i].Value > ss[j].Value {
 	// 		return true
@@ -265,6 +265,16 @@ func (comp *SuperComparator) judgeIsPureStaight(m *map[int]int) (int, *[]kv) {
 			ss = ss[x-4:x+1]
 			return StraightCard, &ss
 		}
+	}
+	if isKeysInKeys(&SPECIAL_STAIGHT, m){
+		ss = []kv{
+			kv{5, 1},
+			kv{4, 1},
+			kv{3, 1},
+			kv{2, 1},
+			kv{1, 1},
+		}
+		return StraightCard, &ss
 	}
 	ss = ss[:5]
 	return HighCard, &ss
