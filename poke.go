@@ -21,16 +21,16 @@ type Record struct {
 }
 
 const (
-	HighCard       = 1  // 高牌
-	Double_OneCard = 2  // 一对
-	Double_TwoCard = 3  // 二对
-	ThreeCard      = 4  // 三条
-	StraightCard   = 6  // 顺子
-	FlushCard      = 7  // 同花
-	GourdCard      = 8  // 三条加对子（葫芦）
-	FourCard       = 9  // 四条
-	StraightFlush  = 10 // 同花顺
-	RoyalFlush     = 11 // 皇家同花顺
+	HighCard      = 1  // 高牌
+	DoubleOneCard = 2  // 一对
+	DoubleTwoCard = 3  // 二对
+	ThreeCard     = 4  // 三条
+	StraightCard  = 6  // 顺子
+	FlushCard     = 7  // 同花
+	GourdCard     = 8  // 三条加对子（葫芦）
+	FourCard      = 9  // 四条
+	StraightFlush = 10 // 同花顺
+	RoyalFlush    = 11 // 皇家同花顺
 )
 
 var COLOR_TABLE = map[byte]int{
@@ -74,15 +74,15 @@ func loadJsonFile(fileName string) *[] Game {
 }
 
 type Cards struct {
-	cardMap  map[int]int
-	colorList [4][]int
+	cardMap    map[int]int
+	colorList  [4][]int
 	finalCards *[]kv
-	max      int
-	min      int
-	isFlush  bool
+	max        int
+	min        int
+	isFlush    bool
 	flushIndex int
-	cardType int
-	score    int
+	cardType   int
+	score      int
 }
 
 func (c *Cards) NewCards(cards string) {
@@ -95,6 +95,7 @@ func (c *Cards) NewCards(cards string) {
 	c.colorList[1] = make([]int, 0, 7)
 	c.colorList[2] = make([]int, 0, 7)
 	c.colorList[3] = make([]int, 0, 7)
+	c.finalCards = nil
 
 	for i := 0; i < len(cards); i += 2 {
 		cardNum := CARD_TABLE[cards[i]]
@@ -109,7 +110,7 @@ func (c *Cards) NewCards(cards string) {
 			c.cardMap[cardNum] += 1
 		}
 		c.colorList[cardColor] = append(c.colorList[cardColor], cardNum)
-		if len(c.colorList[cardColor]) >= 5{
+		if len(c.colorList[cardColor]) >= 5 {
 			c.isFlush = true
 			c.flushIndex = cardColor
 		}
@@ -123,8 +124,8 @@ type kv struct {
 
 type ByValue []kv
 
-func (a ByValue) Len() int           { return len(a) }
-func (a ByValue) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByValue) Len() int      { return len(a) }
+func (a ByValue) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (ss ByValue) Less(i, j int) bool {
 	if ss[i].Value > ss[j].Value {
 		return true
@@ -136,30 +137,22 @@ func (ss ByValue) Less(i, j int) bool {
 
 type ByKey []kv
 
-func (a ByKey) Len() int           { return len(a) }
-func (a ByKey) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByKey) Len() int            { return len(a) }
+func (a ByKey) Swap(i, j int)       { a[i], a[j] = a[j], a[i] }
 func (ss ByKey) Less(i, j int) bool { return ss[i].Key > ss[j].Key }
 
 func (c *Cards) iniScoreInEqualCase() {
 	score := 0
-	// if c.finalCards == nil{
-	// 	var ss []kv = make([]kv, 0, len(c.cardMap))
-	// 	for k, v := range c.cardMap {
-	// 		ss = append(ss, kv{k, v})
-	// 	}
+	if c.finalCards == nil {
+		var ss = make([]kv, 0, len(c.cardMap))
+		for k, v := range c.cardMap {
+			ss = append(ss, kv{k, v})
+		}
 
-	// 	sort.Sort(ByValue(ss))
-	// 	c.finalCards = &ss
-	// }
-	// Slice(ss, func(i, j int) bool {
-	// 	if ss[i].Value > ss[j].Value {
-	// 		return true
-	// 	} else if ss[i].Value == ss[j].Value && ss[i].Key > ss[j].Key {
-	// 		return true
-	// 	}
-	// 	return false
-	// })
-	for _, card := range (*c.finalCards) {
+		sort.Sort(ByValue(ss))
+		c.finalCards = &ss
+	}
+	for _, card := range *c.finalCards {
 		for x := 0; x < card.Value; x++ {
 			score = score*CARD_BIT + card.Key
 		}
@@ -168,19 +161,19 @@ func (c *Cards) iniScoreInEqualCase() {
 	c.score += score
 }
 
-type Comparator struct {
+type Comparator5Cards struct {
 }
 
-type SuperComparator struct {
+type Comparator7Cards struct {
 }
 
 type BaseComparator interface {
 	compare(cards1, cards2 *Cards) int
 }
 
-func (comp *SuperComparator) compare(cards1, cards2 *Cards) int {
-	comp.judge_cardType(cards1)
-	comp.judge_cardType(cards2)
+func (comp *Comparator7Cards) compare(cards1, cards2 *Cards) int {
+	comp.judgeCardType(cards1)
+	comp.judgeCardType(cards2)
 	if cards1.cardType > cards2.cardType {
 		return 1
 	} else if cards1.cardType < cards2.cardType {
@@ -198,39 +191,27 @@ func (comp *SuperComparator) compare(cards1, cards2 *Cards) int {
 	}
 }
 
-
-func (comp *SuperComparator) judge_cardType(cards *Cards){
+func (comp *Comparator7Cards) judgeCardType(cards *Cards) {
 	var flushType int
-	var strightType int
 	var pairType int
 	var ss1 *[]kv
 	var ss2 *[]kv
-	var ss3 *[]kv
 	if cards.isFlush {
 		flushType, ss1 = comp.judgeFlushType(cards)
-	}else {
-		strightType, ss2 = comp.judgeIsPureStaight(&cards.cardMap)
-		pairType, ss3 = comp.judgePairCardType(cards)
+	} else {
+		flushType, ss1 = comp.judgeIsPureStraight(&cards.cardMap, 0)
 	}
+	pairType, ss2 = comp.judgePairCardType(cards)
 	if flushType > pairType {
-		if flushType > strightType{
-			cards.finalCards = ss1
-			cards.cardType = flushType
-		}else{
-			cards.finalCards = ss2
-			cards.cardType = strightType
-		}
-	}else if pairType > strightType{
-		cards.finalCards = ss3
-		cards.cardType = pairType
-	}else{
+		cards.finalCards = ss1
+		cards.cardType = flushType
+	} else {
 		cards.finalCards = ss2
-		cards.cardType = strightType
-	}	
+		cards.cardType = pairType
+	}
 }
 
-
-func (comp *SuperComparator) judgeFlushType(cards *Cards) (int, *[]kv) {
+func (comp *Comparator7Cards) judgeFlushType(cards *Cards) (int, *[]kv) {
 	cardsList := cards.colorList[cards.flushIndex]
 	m := make(map[int]int)
 	for _, card := range cardsList {
@@ -241,9 +222,9 @@ func (comp *SuperComparator) judgeFlushType(cards *Cards) (int, *[]kv) {
 			m[card] += 1
 		}
 	}
-	typeRes, ss := comp.judgeIsPureStaight(&m)
-	if typeRes == StraightCard{
-		if (*ss)[0].Key == CARD_TABLE['A']{
+	typeRes, ss := comp.judgeIsPureStraight(&m, len(cardsList))
+	if typeRes == StraightCard {
+		if (*ss)[0].Key == CARD_TABLE['A'] {
 			return RoyalFlush, ss
 		}
 		return StraightFlush, ss
@@ -251,22 +232,21 @@ func (comp *SuperComparator) judgeFlushType(cards *Cards) (int, *[]kv) {
 	return FlushCard, ss
 }
 
-
-func (comp *SuperComparator) judgeIsPureStaight(m *map[int]int) (int, *[]kv) {
-	var ss []kv = make([]kv, 0, len(*m))
+func (comp *Comparator7Cards) judgeIsPureStraight(m *map[int]int, cardNum int) (int, *[]kv) {
+	var ss = make([]kv, 0, len(*m))
+	var tempSS = make([]kv, 0, 7)
 	for k, v := range *m {
-		for x:=0;x<v;x++{
-			ss = append(ss, kv{k, 1})
-		}
+		ss = append(ss, kv{k, 1})
+		tempSS = append(tempSS, kv{k, v})
 	}
 	sort.Sort(ByKey(ss))
-	for x:= 4; x < len(ss); x++{
-		if (ss[x].Key - ss[x-4].Key) == 5{
-			ss = ss[x-4:x+1]
+	for x := 4; x < len(ss); x++ {
+		if ss[x-4].Key-ss[x].Key == 4 {
+			ss = ss[x-4 : x+1]
 			return StraightCard, &ss
 		}
 	}
-	if isKeysInKeys(&SPECIAL_STAIGHT, m){
+	if isKeysInKeys(&SPECIAL_STAIGHT, m) {
 		ss = []kv{
 			kv{5, 1},
 			kv{4, 1},
@@ -276,60 +256,78 @@ func (comp *SuperComparator) judgeIsPureStaight(m *map[int]int) (int, *[]kv) {
 		}
 		return StraightCard, &ss
 	}
-	ss = ss[:5]
-	return HighCard, &ss
-}
-
-func (comp *SuperComparator) judgePairCardType(cards *Cards) (int, *[]kv) {
-
-	var ss []kv = make([]kv, 0, len(cards.cardMap))
-	for k, v := range cards.cardMap {
-		ss = append(ss, kv{k, v})
-	}
-
-	sort.Sort(ByValue(ss))
-
+	sort.Sort(ByKey(tempSS))
 	// get the five biggest pair cards
-	tail := len(ss) -1
-	if ss[tail].Value > 2{
-		ss[tail].Value -= 2
-	}else if ss[tail].Value == 2{
-		ss = ss[:tail]
-	}else{
-		tail --
-		if ss[tail].Value > 1{
-			ss = ss[:tail+1]
-			ss[tail].Value --
-		}else{
-			ss = ss[:tail]
+	tail := len(tempSS)
+	for x:=cardNum;x>5;x--{
+		tempSS[tail-1].Value --
+		if tempSS[tail-1].Value == 0{
+			tail --
 		}
 	}
-
-	switch len(ss) {
-	case 4:
-		return Double_OneCard, &ss
-	case 3:
-		if ss[0].Value == 3 {
-			return ThreeCard, &ss
-		} else {
-			return Double_TwoCard, &ss
-		}
-	case 2:
-		if ss[0].Value == 4 {
-			return FourCard, &ss
-		} else {
-			return GourdCard, &ss
-		}
-	}
+	ss = tempSS[0:tail]
 	return 0, &ss
 }
 
+func (comp *Comparator7Cards) judgePairCardType(cards *Cards) (int, *[]kv) {
 
+	var ss = make([]kv, 0, len(cards.cardMap))
+	for k, v := range cards.cardMap {
+		ss = append(ss, kv{k, v})
+	}
+	sort.Sort(ByValue(ss))
 
+	var tempS []kv
+	typeRes := HighCard
+	switch ss[0].Value {
+	case 1:
+		ss = ss[0:5]
+		return HighCard, &ss
+	case 2:
+		if ss[1].Value == 2 {
+			tempS = ss[2:]
+			sort.Sort(ByKey(tempS))
+			tempS[0].Value = 1
+			ss = append(ss[0:2],tempS[0] )
+			return DoubleTwoCard, &ss
+		} else {
+			tempS = ss[1:]
+			typeRes = DoubleOneCard
+		}
+	case 3:
+		if ss[1].Value >= 2 {
+			ss = ss[0:2]
+			ss[1].Value = 2
+			return GourdCard, &ss
+		} else {
+			tempS = ss[1:]
+			typeRes = ThreeCard
+		}
+	case 4:
+		tempS = ss[1:]
+		sort.Sort(ByKey(tempS))
+		tempS[0].Value = 1
+		ss = append(ss[0:2],tempS[0])
+		return FourCard, &ss
+	}
+	sort.Sort(ByKey(tempS))
+	ss = append(ss[0:2], tempS...)
 
-func (comp *Comparator) compare(cards1, cards2 *Cards) int {
-	comp.judge_cardType(cards1)
-	comp.judge_cardType(cards2)
+	// get the five biggest pair cards
+	tail := len(ss)
+	for x:=7;x>5;x--{
+		ss[tail-1].Value --
+		if ss[tail-1].Value == 0{
+			tail --
+		}
+	}
+	ss = ss[0:tail]
+	return typeRes, &ss
+}
+
+func (comp *Comparator5Cards) compare(cards1, cards2 *Cards) int {
+	comp.judgeCardType(cards1)
+	comp.judgeCardType(cards2)
 	if cards1.cardType > cards2.cardType {
 		return 1
 	} else if cards1.cardType < cards2.cardType {
@@ -347,16 +345,16 @@ func (comp *Comparator) compare(cards1, cards2 *Cards) int {
 	}
 }
 
-func (comp *Comparator) judge_cardType(cards *Cards) {
+func (comp *Comparator5Cards) judgeCardType(cards *Cards) {
 	if len(cards.cardMap) == 5 {
 		comp.judgeStraightType(cards)
 	} else if len(cards.cardMap) == 4 {
-		cards.cardType = Double_OneCard
+		cards.cardType = DoubleOneCard
 	} else if len(cards.cardMap) == 3 {
 		if maxValueOfMap(&cards.cardMap) == 3 {
 			cards.cardType = ThreeCard
 		} else {
-			cards.cardType = Double_TwoCard
+			cards.cardType = DoubleTwoCard
 		}
 	} else if len(cards.cardMap) == 2 {
 		if maxValueOfMap(&cards.cardMap) == 4 {
@@ -392,7 +390,7 @@ func maxValueOfMap(m *map[int]int) int {
 	return maxV
 }
 
-func (comp *Comparator) judgeStraightType(cards *Cards) {
+func (comp *Comparator5Cards) judgeStraightType(cards *Cards) {
 	if !comp.baseJudgeStaight(cards) {
 		cards.cardType = HighCard
 	} else if !cards.isFlush {
@@ -404,7 +402,7 @@ func (comp *Comparator) judgeStraightType(cards *Cards) {
 	}
 }
 
-func (comp *Comparator) baseJudgeStaight(cards *Cards) bool {
+func (comp *Comparator5Cards) baseJudgeStaight(cards *Cards) bool {
 	if cards.max-cards.min == 4 {
 		return true
 	}
@@ -431,8 +429,8 @@ func main() {
 	startTime := time.Now().UnixNano() //纳秒
 	t := loadJsonFile("test_file/seven_cards.result.json")
 	var comparator BaseComparator
-	comparator = new(SuperComparator)
-	const threadNum = 1
+	comparator = new(Comparator7Cards)
+	const threadNum = 2
 	runtime.GOMAXPROCS(threadNum)
 
 	var flags [threadNum]chan int
@@ -453,16 +451,13 @@ func main() {
 func thread(t *[]Game, comparator *BaseComparator, start int, end int, flag chan int) {
 	var aliceCard Cards
 	var bobCard Cards
-	i:=0
-	for _, game := range (*t)[start:end] {
+	for k, game := range (*t)[start:end] {
 		aliceCard.NewCards(game.Alice)
 		bobCard.NewCards(game.Bob)
 		res := (*comparator).compare(&aliceCard, &bobCard)
 		if res != game.Result {
-			i ++
-			// panic("result is not true")
+			panic(fmt.Sprintf("result %d is not true", k))
 		}
 	}
-	fmt.Printf("incorrect: %d %d\n", i, len(*t))
 	flag <- 1
 }
