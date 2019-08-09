@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
-	"sort"
 	"runtime"
+	"sort"
 	"time"
-	"os"
 )
 
 type Game struct {
@@ -22,7 +21,6 @@ type Record struct {
 }
 
 const (
-	NoneCard       = 0
 	HighCard       = 1  // 高牌
 	Double_OneCard = 2  // 一对
 	Double_TwoCard = 3  // 二对
@@ -82,7 +80,7 @@ type Cards struct {
 	score    int
 }
 
-func(c *Cards) NewCards(cards string)  {
+func (c *Cards) NewCards(cards string) {
 	c.max = 0
 	c.min = 100
 	c.isFlush = true
@@ -113,7 +111,6 @@ type kv struct {
 	Value int
 }
 
-
 func (c *Cards) iniScoreInEqualCase() {
 	score := 0
 	var ss []kv
@@ -124,7 +121,7 @@ func (c *Cards) iniScoreInEqualCase() {
 	sort.Slice(ss, func(i, j int) bool {
 		if ss[i].Value > ss[j].Value {
 			return true
-		}else if ss[i].Value == ss[j].Value && ss[i].Key > ss[j].Key{
+		} else if ss[i].Value == ss[j].Value && ss[i].Key > ss[j].Key {
 			return true
 		}
 		return false
@@ -138,22 +135,6 @@ func (c *Cards) iniScoreInEqualCase() {
 	c.score += score
 }
 
-
-func loadFont(fileName string) *[] Game {
-
-	data, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		panic("path error")
-	}
-	var record Record
-	err = json.Unmarshal(data, &record)
-	if err != nil {
-		return nil
-	}
-	return record.Matches
-
-}
-
 type Comparator struct {
 }
 
@@ -161,8 +142,7 @@ type BaseComparator interface {
 	compare(cards1, cards2 *Cards) int
 }
 
-
-func (comp Comparator) compare(cards1, cards2 *Cards) int{
+func (comp *Comparator) compare(cards1, cards2 *Cards) int {
 	comp.judge_cardType(cards1)
 	comp.judge_cardType(cards2)
 	if cards1.cardType > cards2.cardType {
@@ -182,7 +162,7 @@ func (comp Comparator) compare(cards1, cards2 *Cards) int{
 	}
 }
 
-func (comp Comparator)judge_cardType(cards *Cards) {
+func (comp *Comparator) judge_cardType(cards *Cards) {
 	if len(cards.cardMap) == 5 {
 		comp.judgeStraightType(cards)
 	} else if len(cards.cardMap) == 4 {
@@ -227,8 +207,7 @@ func maxValueOfMap(m *map[int]int) int {
 	return maxV
 }
 
-
-func (comp Comparator) judgeStraightType(cards *Cards) {
+func (comp *Comparator) judgeStraightType(cards *Cards) {
 	if !comp.baseJudgeStaight(cards) {
 		cards.cardType = HighCard
 	} else if !cards.isFlush {
@@ -240,7 +219,7 @@ func (comp Comparator) judgeStraightType(cards *Cards) {
 	}
 }
 
-func( comp Comparator) baseJudgeStaight(cards *Cards)bool{
+func (comp *Comparator) baseJudgeStaight(cards *Cards) bool {
 	if cards.max-cards.min == 4 {
 		return true
 	}
@@ -264,29 +243,29 @@ func isKeysInKeys(l *[]int, m *map[int]int) bool {
 }
 
 func main() {
-	startTime := time.Now().UnixNano()   //纳秒
-	t := loadFont("test_file/result.json")
+	startTime := time.Now().UnixNano() //纳秒
+	t := loadJsonFile("test_file/result.json")
 	var comparator BaseComparator
-	comparator = Comparator{}
+	comparator = new(Comparator)
 	const threadNum = 3
 	runtime.GOMAXPROCS(threadNum)
 
 	var flags [threadNum]chan int
-	for x:=0;x<threadNum;x++ {
+	for x := 0; x < threadNum; x++ {
 		flags[x] = make(chan int)
 		start := x * len(*t) / threadNum
-		end := min2int(start + len(*t) / threadNum, len(*t))
+		end := min2int(start+len(*t)/threadNum, len(*t))
 		go thread(t, &comparator, start, end, flags[x])
 	}
-	fmt.Printf("time: %d, cpu: %d, go thread: %d\n",  time.Now().UnixNano() -startTime, runtime.NumCPU(), runtime.NumGoroutine())
-	for x:=0;x<threadNum;x++ {
-		<- flags[x]
+	fmt.Printf("time: %d, cpu: %d, go thread: %d\n", time.Now().UnixNano()-startTime, runtime.NumCPU(), runtime.NumGoroutine())
+	for x := 0; x < threadNum; x++ {
+		<-flags[x]
 	}
 	fmt.Print("Are you happy?\n")
 
 }
 
-func thread(t *[]Game, comparator *BaseComparator,  start int, end int, flag chan int) {
+func thread(t *[]Game, comparator *BaseComparator, start int, end int, flag chan int) {
 	var aliceCard Cards
 	var bobCard Cards
 	for _, game := range (*t)[start:end] {
@@ -294,7 +273,7 @@ func thread(t *[]Game, comparator *BaseComparator,  start int, end int, flag cha
 		bobCard.NewCards(game.Bob)
 		res := (*comparator).compare(&aliceCard, &bobCard)
 		if res != game.Result {
-			os.Exit(-1)
+			panic("result is not true")
 		}
 	}
 	flag <- 1
