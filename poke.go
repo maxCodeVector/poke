@@ -65,17 +65,21 @@ var SPECIAL = []kv{
 }
 var SPECIAL_STAIGHT = []int{2, 3, 4, 5, 14}
 
-func loadJsonFile(fileName string) *[] Game {
+func loadJsonFile(fileName string, rep int) *[] Game {
 
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		panic("path error")
 	}
 	var record Record
-	record.Matches = make([]Game, 0, 10000)
+	record.Matches = make([]Game, 0, 10000*rep)
 	err = json.Unmarshal(data, &record)
 	if err != nil {
 		panic("format error")
+	}
+	tempS := record.Matches
+	for x:=1;x<rep;x++{
+		record.Matches = append(record.Matches, tempS...)
 	}
 	return &record.Matches
 }
@@ -209,16 +213,14 @@ func (comp *Comparator7Cards) judgeCardType(cards *Cards) {
 	var ss1 *[]kv
 	var ss2 *[]kv
 
-	var ss = make([]kv, 0, len(cards.cardMap))
-	for k, v := range cards.cardMap {
-		ss = append(ss, kv{k, v})
-	}
-	if cards.isFlush {
-		flushType, ss1 = comp.judgeFlushType(cards)
-	} else {
-		flushType, ss1 = comp.judgeIsPureStraight(&cards.cardMap, 0)
-	}
 	pairType, ss2 = comp.judgePairCardType(&cards.cardMap)
+	if pairType < FlushCard || cards.isFlush {
+		if cards.isFlush {
+			flushType, ss1 = comp.judgeFlushType(cards)
+		} else {
+			flushType, ss1 = comp.judgeIsPureStraight(&cards.cardMap, 0)
+		}
+	}
 	if flushType > pairType {
 		cards.finalCards = ss1
 		cards.cardType = flushType
@@ -434,11 +436,11 @@ func isKeysInKeys(l *[]int, m *map[int]int) bool {
 }
 
 func main() {
+	t := loadJsonFile("test_file/seven_cards.result.json", 100)
 	startTime := time.Now().UnixNano() //纳秒
-	t := loadJsonFile("test_file/seven_cards.result.json")
 	var comparator BaseComparator
 	comparator = new(Comparator7Cards)
-	const threadNum = 10
+	const threadNum = 4
 	runtime.GOMAXPROCS(threadNum)
 
 	var flags [threadNum]chan int
@@ -448,11 +450,11 @@ func main() {
 		end := min2int(start+len(*t)/threadNum, len(*t))
 		go thread(t, &comparator, start, end, flags[x])
 	}
-	fmt.Printf("time: %d, go thread: %d\n", (time.Now().UnixNano()-startTime)/1000000, runtime.NumGoroutine())
 	for x := 0; x < threadNum; x++ {
 		<-flags[x]
 	}
-	fmt.Print("Are you happy?\n")
+	fmt.Printf("cards %d, go thread: %d\n", len(*t), (time.Now().UnixNano()-startTime)/1000000)
+	fmt.Printf("Are you happy?\n")
 
 }
 
