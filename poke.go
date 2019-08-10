@@ -31,8 +31,10 @@ const (
 	FourCard      = 9  // 四条
 	StraightFlush = 10 // 同花顺
 	RoyalFlush    = 11 // 皇家同花顺
+	CARD_BIT      = 16
 )
 
+var CARD_A_PART = 14 * int(math.Pow(16, 4))
 var COLOR_TABLE = map[byte]int{
 	's': 0,
 	'h': 1,
@@ -54,9 +56,14 @@ var CARD_TABLE = map[byte]int{
 	'K': 13,
 	'A': 14,
 }
+var SPECIAL = []kv{
+	{5, 1},
+	{4, 1},
+	{3, 1},
+	{2, 1},
+	{1, 1},
+}
 var SPECIAL_STAIGHT = []int{2, 3, 4, 5, 14}
-var CARD_BIT = 16
-var CARD_A_PART = CARD_TABLE['A'] * int(math.Pow(16, 4))
 
 func loadJsonFile(fileName string) *[] Game {
 
@@ -209,9 +216,9 @@ func (comp *Comparator7Cards) judgeCardType(cards *Cards) {
 	if cards.isFlush {
 		flushType, ss1 = comp.judgeFlushType(cards)
 	} else {
-		flushType, ss1 = comp.judgeIsPureStraight(&cards.cardMap, &ss, 0)
+		flushType, ss1 = comp.judgeIsPureStraight(&cards.cardMap, 0)
 	}
-	pairType, ss2 = comp.judgePairCardType(cards, &ss)
+	pairType, ss2 = comp.judgePairCardType(&cards.cardMap)
 	if flushType > pairType {
 		cards.finalCards = ss1
 		cards.cardType = flushType
@@ -235,11 +242,7 @@ func (comp *Comparator7Cards) judgeFlushType(cards *Cards) (int, *[]kv) {
 			m[card] += 1
 		}
 	}
-	var ss = make([]kv, 0, len(m))
-	for k, v := range m {
-		ss = append(ss, kv{k, v})
-	}
-	typeRes, ssp := comp.judgeIsPureStraight(&m, &ss, len(cardsList))
+	typeRes, ssp := comp.judgeIsPureStraight(&m, len(cardsList))
 	if typeRes == StraightCard {
 		if (*ssp)[0].Key == CARD_TABLE['A'] {
 			return RoyalFlush, ssp
@@ -249,8 +252,11 @@ func (comp *Comparator7Cards) judgeFlushType(cards *Cards) (int, *[]kv) {
 	return FlushCard, ssp
 }
 
-func (comp *Comparator7Cards) judgeIsPureStraight(m *map[int]int, ssp *[]kv, cardNum int) (int, *[]kv) {
-	ss := *ssp
+func (comp *Comparator7Cards) judgeIsPureStraight(m *map[int]int, cardNum int) (int, *[]kv) {
+	var ss = make([]kv, 0, len(*m))
+	for k, v := range *m {
+		ss = append(ss, kv{k, v})
+	}
 	sort.Sort(ByKey(ss))
 	for x := 4; x < len(ss); x++ {
 		if ss[x-4].Key-ss[x].Key == 4 {
@@ -258,15 +264,9 @@ func (comp *Comparator7Cards) judgeIsPureStraight(m *map[int]int, ssp *[]kv, car
 			return StraightCard, &ss
 		}
 	}
-	if len(ss) >= 5 && isKeysInKeys(&SPECIAL_STAIGHT, m) {
-		ss = []kv{
-			{5, 1},
-			{4, 1},
-			{3, 1},
-			{2, 1},
-			{1, 1},
-		}
-		return StraightCard, &ss
+	lens := len(ss) - 1
+	if lens >= 4 && ss[0].Key == 14 && ss[lens-3].Key == 5 && ss[lens].Key == 2 {
+		return StraightCard, &SPECIAL
 	}
 	// get the five biggest pair cards
 	tail := len(ss)
@@ -280,10 +280,10 @@ func (comp *Comparator7Cards) judgeIsPureStraight(m *map[int]int, ssp *[]kv, car
 	return 0, &ss
 }
 
-func (comp *Comparator7Cards) judgePairCardType(cards *Cards, ssp *[]kv) (int, *[]kv) {
+func (comp *Comparator7Cards) judgePairCardType(m *map[int]int) (int, *[]kv) {
 
-	var ss = make([]kv, 0, len(cards.cardMap))
-	for k, v := range cards.cardMap {
+	var ss = make([]kv, 0, len(*m))
+	for k, v := range *m {
 		ss = append(ss, kv{k, v})
 	}
 	sort.Sort(ByValue(ss))
@@ -298,7 +298,6 @@ func (comp *Comparator7Cards) judgePairCardType(cards *Cards, ssp *[]kv) (int, *
 		if ss[1].Value == 2 {
 			tempS = ss[2:]
 			sort.Sort(ByKey(tempS))
-			tempS[0].Value = 1
 			ss = append(ss[0:2], tempS[0])
 			return DoubleTwoCard, &ss
 		} else {
@@ -308,7 +307,6 @@ func (comp *Comparator7Cards) judgePairCardType(cards *Cards, ssp *[]kv) (int, *
 	case 3:
 		if ss[1].Value >= 2 {
 			ss = ss[0:2]
-			ss[1].Value = 2
 			return GourdCard, &ss
 		} else {
 			tempS = ss[1:]
@@ -317,7 +315,6 @@ func (comp *Comparator7Cards) judgePairCardType(cards *Cards, ssp *[]kv) (int, *
 	case 4:
 		tempS = ss[1:]
 		sort.Sort(ByKey(tempS))
-		tempS[0].Value = 1
 		ss = append(ss[0:2], tempS[0])
 		return FourCard, &ss
 	}
@@ -441,7 +438,7 @@ func main() {
 	t := loadJsonFile("test_file/seven_cards.result.json")
 	var comparator BaseComparator
 	comparator = new(Comparator7Cards)
-	const threadNum = 3
+	const threadNum = 10
 	runtime.GOMAXPROCS(threadNum)
 
 	var flags [threadNum]chan int
@@ -451,7 +448,7 @@ func main() {
 		end := min2int(start+len(*t)/threadNum, len(*t))
 		go thread(t, &comparator, start, end, flags[x])
 	}
-	fmt.Printf("time: %d, cpu: %d, go thread: %d\n", time.Now().UnixNano()-startTime, runtime.NumCPU(), runtime.NumGoroutine())
+	fmt.Printf("time: %d, go thread: %d\n", (time.Now().UnixNano()-startTime)/1000000, runtime.NumGoroutine())
 	for x := 0; x < threadNum; x++ {
 		<-flags[x]
 	}
