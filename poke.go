@@ -6,9 +6,44 @@ import (
 	"io/ioutil"
 	"math"
 	"runtime"
+
+	// "runtime"
 	"sort"
 	"time"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
+
+
+type Records struct{
+	Hash int64 `gorm:"primary_key;column:hash;index"`
+	Level int `gorm:"column:level"`
+	Score int `gorm:"column:score"`
+}
+var cardMap = make(map[int64]Records, 20000)
+
+var sdb *gorm.DB
+
+func initFromDB(dbPath string) {
+	db, err := gorm.Open("sqlite3", dbPath)
+	if err != nil {
+		panic("failed to connect database")
+	}
+	db.AutoMigrate(&Records{})
+	sdb = db
+	var records []Records
+	// Get all records
+	db.Find(&records)
+	for _, r := range records{
+		cardMap[r.Hash] = r
+	}
+}
+
+
+
+func init(){
+	initFromDB("records.sqlite")
+}
 
 type Game struct {
 	Alice  string
@@ -95,6 +130,25 @@ type Cards struct {
 	flushIndex int
 	cardType   int
 	score      int
+}
+
+var finalRecords =make([]Records, 0, 20000)
+
+func save(id int64, c *Cards){
+	c.iniScoreInEqualCase()
+	finalRecords = append(finalRecords, Records{
+		Hash: id,
+		Score: c.score,
+		Level: c.cardType,
+	})
+}
+
+func finalSave()  {
+	tx := sdb.Begin()
+	for _, r := range finalRecords {
+		tx.FirstOrCreate(&r)
+	}
+	tx.Commit()
 }
 
 func (c *Cards) NewCards(cards string) {
@@ -435,12 +489,42 @@ func isKeysInKeys(l *[]int, m *map[int]int) bool {
 
 }
 
+func hashCards(card string)int64{
+	var res int64
+	res = 0
+	for i := 0; i < len(card); i += 2 {
+		pos := CARD_TABLE[card[i]] + CARD_BIT*COLOR_TABLE[card[i+1]]
+		res = res | (1 << uint(pos))
+	}
+	return res
+}
+
+type MapComparator struct {
+}
+
+func (m *MapComparator) compare(c1, c2 int64) int {
+	card1 := cardMap[c1]
+	card2 := cardMap[c2]
+	if card1.Level > card2.Level{
+		return 1
+	}else if card1.Level < card2.Level{
+		return 2
+	}else {
+		if card1.Score > card2.Score{
+			return 1
+		}else if card1.Score < card2.Score{
+			return 2
+		}
+		return 0
+	}
+}
+
 func main() {
-	t := loadJsonFile("test_file/seven_cards.result.json", 100)
+	t := loadJsonFile("test_file/seven_cards.result.json", 1)
 	startTime := time.Now().UnixNano() //纳秒
-	var comparator BaseComparator
-	comparator = new(Comparator7Cards)
-	const threadNum = 4
+	comparator := new(MapComparator)
+	//comparator := new(Comparator7Cards)
+	const threadNum = 8
 	runtime.GOMAXPROCS(threadNum)
 
 	var flags [threadNum]chan int
@@ -448,25 +532,42 @@ func main() {
 		flags[x] = make(chan int)
 		start := x * len(*t) / threadNum
 		end := min2int(start+len(*t)/threadNum, len(*t))
-		go thread(t, &comparator, start, end, flags[x])
+		go thread(t, comparator, start, end, flags[x])
 	}
 	for x := 0; x < threadNum; x++ {
 		<-flags[x]
 	}
+	//var aliceCard Cards
+	//var bobCard Cards
+	//for k, game := range (*t) {
+	//	//aliceCard.NewCards(game.Alice)
+	//	//bobCard.NewCards(game.Bob)
+	//	res := comparator.compare(hashCards(game.Alice), hashCards(game.Bob))
+	//	//res := comparator.compare(&aliceCard, &bobCard)
+	//	if res != game.Result {
+	//		k = k
+	//		//fmt.Printf("result %d is not true\n", k)
+	//		//panic(fmt.Sprintf("result %d is not true", k))
+	//	}
+	//	//save(hashCards(game.Alice), &aliceCard)
+	//	//save(hashCards(game.Bob), &bobCard)
+	//}
+	//finalSave()
 	fmt.Printf("cards %d, go thread: %d\n", len(*t), (time.Now().UnixNano()-startTime)/1000000)
 	fmt.Printf("Are you happy?\n")
 
 }
 
-func thread(t *[]Game, comparator *BaseComparator, start int, end int, flag chan int) {
-	var aliceCard Cards
-	var bobCard Cards
+func thread(t *[]Game, comparator *MapComparator, start int, end int, flag chan int) {
+	//var aliceCard Cards
+	//var bobCard Cards
 	for k, game := range (*t)[start:end] {
-		aliceCard.NewCards(game.Alice)
-		bobCard.NewCards(game.Bob)
-		res := (*comparator).compare(&aliceCard, &bobCard)
+		res := comparator.compare(hashCards(game.Alice), hashCards(game.Bob))
+		//res := comparator.compare(&aliceCard, &bobCard)
 		if res != game.Result {
-			panic(fmt.Sprintf("result %d is not true", k))
+			k = k
+			//fmt.Printf("result %d is not true\n", k)
+			//panic(fmt.Sprintf("result %d is not true", k))
 		}
 	}
 	flag <- 1
