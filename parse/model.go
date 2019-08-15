@@ -68,6 +68,15 @@ func getConnBit(cardMap int)int{
 
 
 func (c *CardType) GetCard() *Cards {
+	defer func() {
+		score := c.pairBitMap[0]
+		if c.cards.Level == HighCard {
+			score = score & ^2
+			score &= score - 1
+			score &= score - 1
+		}
+		c.cards.Score = score
+	}()
 	if c.flushColor != 0 && getConnBit(c.colorBitMap[c.flushColor-1]) >= 5{
 		if (^c.colorBitMap[c.flushColor-1] & (0x1F << (15-5))) == 0{
 			c.cards.Level = RoyalFlush

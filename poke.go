@@ -53,7 +53,7 @@ func (m *MapComparator) compare(c1, c2 *parse.Cards) int {
 }
 
 func main() {
-	t := parse.LoadJsonFile("json/seven_cards.result.json", 1)
+	t := parse.LoadJsonFile("json/result.json", 1)
 	startTime := time.Now().UnixNano() //纳秒
 	var comparator BaseComparator
 	comparator = new(MapComparator)
@@ -84,9 +84,11 @@ func thread(t *[]parse.Game, comparator *BaseComparator, start int, end int, fla
 		aliceCard := parse.NewCardType(game.Alice)
 		bobCard := parse.NewCardType(game.Bob)
 		res := (*comparator).compare(aliceCard.GetCard(), bobCard.GetCard())
-		if res != game.Result {
+		if res != game.Result{
+			if game.Result == parse.HighCard{
+				//panic(fmt.Sprintf("%d am panic!!!", 2))
+			}
 			i++
-			//panic(fmt.Sprintf("%d am panic!!!", b))
 		}
 	}
 	fmt.Printf("%d fail\n", i)
