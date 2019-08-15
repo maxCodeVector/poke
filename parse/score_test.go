@@ -28,3 +28,19 @@ func TestScoreType22_1(t *testing.T) {
 	bobScore := NewCardType(bob).GetCard()
 	assert.Equal(t, aliceScore.Score < bobScore.Score, true)
 }
+
+func TestScoreTypeStraight_1(t *testing.T) {
+	alice := "QsJsTdKdKh5c9s"
+	bob := "9hKcQsJsTdKdKh"
+	aliceScore := NewCardType(alice).GetCard()
+	bobScore := NewCardType(bob).GetCard()
+	assert.Equal(t, aliceScore.Score ==  bobScore.Score, true)
+}
+
+func TestScoreTypeFlush_1(t *testing.T) {
+	alice := "4h7dKh7h8h6h6s"
+	bob := "Qd3h4h7dKh7h8h"
+	aliceScore := NewCardType(alice).GetCard()
+	bobScore := NewCardType(bob).GetCard()
+	assert.Equal(t, aliceScore.Score >  bobScore.Score, true)
+}

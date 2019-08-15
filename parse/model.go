@@ -1,10 +1,10 @@
 package parse
 
 type Cards struct {
-	Hash  int64 `gorm:"primary_key;column:hash;index"`
-	Level int   `gorm:"column:level"`
-	Score int   `gorm:"column:score"`
-	cardType *CardType
+	Hash     int64 `gorm:"primary_key;column:hash;index"`
+	Level    int   `gorm:"column:level"`
+	Score    int   `gorm:"column:score"`
+	CardType *CardType
 }
 
 type CardType struct {
@@ -13,7 +13,6 @@ type CardType struct {
 	colorBitMapLen [4]int
 	flushColor int
 	cards Cards
-	pairLevel int
 	origin string
 
 }
@@ -42,7 +41,7 @@ func NewCardType(c string) *CardType {
 			cardType.colorBitMap[color] |= 2
 		}
 	}
-	cardType.cards.cardType = &cardType
+	cardType.cards.CardType = &cardType
 	return &cardType
 }
 
@@ -61,10 +60,21 @@ func getOneBitNumber(x int)int{
 func getConnBit(cardMap int)int{
 	x := cardMap
 	k := 0
-	for k=0; x !=0;k++ {
+	maxBitPos := 0
+	for {
+		maxBitPos = x
 		x = x & (x << 1)
+		k++
+		if x != 0{
+			maxBitPos = x
+		}else {
+			break
+		}
 	}
-	return k
+	if k >= 5{
+		return maxBitPos
+	}
+	return 0
 }
 
 func (c *CardType) GetScore() *Cards {
@@ -95,19 +105,57 @@ func (c *CardType) GetScore() *Cards {
 		score &= score - 1
 		score &= score - 1
 		c.cards.Score += score
+	case ThreeCard:
+		c.cards.Score = c.pairBitMap[2] << 16
+		score := c.pairBitMap[0] & ^c.pairBitMap[2]
+		score = score & ^2
+		score &= score - 1
+		score &= score - 1
+		c.cards.Score += score
+	case FlushCard:
+		score := c.colorBitMap[c.flushColor-1]
+		score = score & ^2
+		numFlushCard := c.colorBitMapLen[c.flushColor-1]
+		for{
+			if numFlushCard <= 5{
+				break
+			}
+			score &= score - 1
+			numFlushCard --
+		}
+		c.cards.Score = score
+	case GourdCard:
+		c.cards.Score = c.pairBitMap[2] << 16
+		score := c.pairBitMap[0] & ^c.pairBitMap[2]
+		score = score & ^2
+		score &= score - 1
+		score &= score - 1
+		c.cards.Score += score
+	case FourCard:
+		c.cards.Score = c.pairBitMap[3] << 16
+		score := c.pairBitMap[0] & ^c.pairBitMap[3]
+		score = score & ^2
+		score &= score - 1
+		score &= score - 1
+		c.cards.Score += score
+	case StraightCard, StraightFlush, RoyalFlush:
 	}
 	return &c.cards
 }
 
 func (c *CardType) GetCard() *Cards {
-	defer  c.GetScore()
-	if c.flushColor != 0 && getConnBit(c.colorBitMap[c.flushColor-1]) >= 5{
-		if (^c.colorBitMap[c.flushColor-1] & (0x1F << (15-5))) == 0{
-			c.cards.Level = RoyalFlush
-		}else {
-			c.cards.Level = StraightFlush
+	//defer  c.GetScore()
+	if  c.flushColor != 0{
+		maxBitPos := getConnBit(c.colorBitMap[c.flushColor-1])
+		if maxBitPos != 0{
+			if (^c.colorBitMap[c.flushColor-1] & (0x1F << (15-5))) == 0{
+				c.cards.Level = RoyalFlush
+			}else {
+				c.cards.Level = StraightFlush
+			}
+			c.cards.Score = maxBitPos
+			return &c.cards
 		}
-		return &c.cards
 	}
 	if c.pairBitMap[3] != 0{
 		c.cards.Level = FourCard
@@ -118,15 +166,17 @@ func (c *CardType) GetCard() *Cards {
 				c.cards.Level = GourdCard
 			} else if c.flushColor != 0{
 				c.cards.Level = FlushCard
-			} else if getConnBit(c.pairBitMap[0]) >= 5 {
+			} else if maxBitPos := getConnBit(c.pairBitMap[0]); maxBitPos != 0{
 				c.cards.Level = StraightCard
+				c.cards.Score = maxBitPos
 			}else{
 				c.cards.Level = ThreeCard
 			}
 		}else if c.flushColor != 0{
 			c.cards.Level = FlushCard
-		} else if getConnBit(c.pairBitMap[0]) >= 5{
+		} else if maxBitPos := getConnBit(c.pairBitMap[0]); maxBitPos != 0{
 			c.cards.Level = StraightCard
+			c.cards.Score = maxBitPos
 		} else if c.pairBitMap[1] != 0 {
 			if pairNum >= 2 {
 				c.cards.Level = DoubleTwoCard
