@@ -4,59 +4,27 @@ import (
 	"github.com/bmizerany/assert"
 	"testing"
 )
-func TestScoreType1(t *testing.T) {
-	level := NewCardType("Ts7cKd4cJdAh3h").GetCard().Score
-	assert.Equal(t, level, HighCard)
+func TestScoreType1_1(t *testing.T) {
+	alice :="TsKdJh6d4sQh2s"
+	bob := "7c2hTsKdJh6d4s"
+
+	aliceScore := NewCardType(alice).GetCard().Score
+	bobScore := NewCardType(bob).GetCard().Score
+	assert.Equal(t, aliceScore > bobScore, true)
 }
 
-
-func TestScoreType2(t *testing.T) {
-	level := NewCardType("8sAhAc7sJc6hQd").GetCard().Score
-	assert.Equal(t, level, DoubleOneCard)
+func TestScoreType21_1(t *testing.T) {
+	alice := "5sJc9d3d2s3cAc"
+	bob := "5dQs5sJc9d3d2s"
+	aliceScore := NewCardType(alice).GetCard()
+	bobScore := NewCardType(bob).GetCard()
+	assert.Equal(t, aliceScore.Score < bobScore.Score, true)
 }
 
-func TestScoreType32(t *testing.T) {
-	level := NewCardType("TsTc4d4cTdAh3h").GetCard().Score
-	assert.Equal(t, level, GourdCard)
-}
-
-func TestScoreType22(t *testing.T) {
-	level := NewCardType("TsTc4d4cAdAh3h").GetCard().Score
-	assert.Equal(t, level, DoubleTwoCard)
-}
-
-func TestScoreType4(t *testing.T) {
-	level := NewCardType("TsTcTd4cTdAh3h").GetCard().Score
-	assert.Equal(t, level, FourCard)
-}
-
-
-func TestScoreTypeFlush(t *testing.T) {
-	level := NewCardType("Ts3sTd4sTdAs7s").GetCard().Score
-	assert.Equal(t, level, FlushCard)
-}
-
-func TestScoreTypeStraight(t *testing.T) {
-	level := NewCardType("TsJcQdKcTdAh3h").GetCard().Score
-	assert.Equal(t, level, StraightCard)
-}
-
-func TestScoreTypeFinal(t *testing.T) {
-	level := NewCardType("TsJsQsKsTdAs3h").GetCard().Score
-	assert.Equal(t, level, RoyalFlush)
-}
-
-func TestScoreTypeFlushStraight(t *testing.T) {
-	level := NewCardType("TsJsQsKsTd9s3h").GetCard().Score
-	assert.Equal(t, level, StraightFlush)
-}
-
-func TestScoreTypeSFlushStraight(t *testing.T) {
-	level := NewCardType("As2s3s4sTd5s3h").GetCard().Score
-	assert.Equal(t, level, StraightFlush)
-}
-
-func TestScoreTypeSStraight(t *testing.T) {
-	level := NewCardType("Ad2s3s4sTd5s3h").GetCard().Score
-	assert.Equal(t, level, StraightCard)
+func TestScoreType22_1(t *testing.T) {
+	alice := "Qs6s5hQhAdAc6c"
+	bob := "AsKsQs6s5hQhAd"
+	aliceScore := NewCardType(alice).GetCard()
+	bobScore := NewCardType(bob).GetCard()
+	assert.Equal(t, aliceScore.Score < bobScore.Score, true)
 }

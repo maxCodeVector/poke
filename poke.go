@@ -43,17 +43,21 @@ func (m *MapComparator) compare(c1, c2 *parse.Cards) int {
 	} else if c1.Level < c2.Level {
 		return 2
 	} else {
-		if c1.Score > c2.Score {
-			return 1
-		} else if c1.Score < c2.Score {
-			return 2
-		}
-		return 0
+		return compareInEqualLevel(c1, c2)
 	}
 }
 
+func compareInEqualLevel(c1 *parse.Cards, c2 *parse.Cards) int {
+	if c1.Score > c2.Score {
+		return 1
+	} else if c1.Score < c2.Score {
+		return 2
+	}
+	return 0
+}
+
 func main() {
-	t := parse.LoadJsonFile("json/result.json", 1)
+	t := parse.LoadJsonFile("json/seven_cards.result.json", 1)
 	startTime := time.Now().UnixNano() //纳秒
 	var comparator BaseComparator
 	comparator = new(MapComparator)
@@ -85,8 +89,27 @@ func thread(t *[]parse.Game, comparator *BaseComparator, start int, end int, fla
 		bobCard := parse.NewCardType(game.Bob)
 		res := (*comparator).compare(aliceCard.GetCard(), bobCard.GetCard())
 		if res != game.Result{
-			if game.Result == parse.HighCard{
+			if aliceCard.GetCard().Level != bobCard.GetCard().Level{
+				panic("level has wrong")
+				//fmt.Printf("alice := \"%s\"\n", game.Alice)
+				//fmt.Printf("bob := \"%s\"\n", game.Bob)
 				//panic(fmt.Sprintf("%d am panic!!!", 2))
+			}
+			if aliceCard.GetCard().Level == parse.HighCard{
+				fmt.Printf("alice := \"%s\"\n", game.Alice)
+				fmt.Printf("bob := \"%s\"\n", game.Bob)
+				panic("high card has wrong")
+			}
+			if aliceCard.GetCard().Level == parse.DoubleOneCard{
+				fmt.Printf("alice := \"%s\"\n", game.Alice)
+				fmt.Printf("bob := \"%s\"\n", game.Bob)
+				panic("2 card has wrong")
+			}
+			if aliceCard.GetCard().Level == parse.DoubleTwoCard{
+				//fmt.Printf("alice := \"%s\"\n", game.Alice)
+				//fmt.Printf("bob := \"%s\"\n", game.Bob)
+				//fmt.Printf("result: %d\n", game.Result)
+				//panic("22 card has wrong")
 			}
 			i++
 		}

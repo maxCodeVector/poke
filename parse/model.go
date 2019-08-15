@@ -4,6 +4,7 @@ type Cards struct {
 	Hash  int64 `gorm:"primary_key;column:hash;index"`
 	Level int   `gorm:"column:level"`
 	Score int   `gorm:"column:score"`
+	cardType *CardType
 }
 
 type CardType struct {
@@ -41,6 +42,7 @@ func NewCardType(c string) *CardType {
 			cardType.colorBitMap[color] |= 2
 		}
 	}
+	cardType.cards.cardType = &cardType
 	return &cardType
 }
 
@@ -65,18 +67,40 @@ func getConnBit(cardMap int)int{
 	return k
 }
 
-
-
-func (c *CardType) GetCard() *Cards {
-	defer func() {
+func (c *CardType) GetScore() *Cards {
+	if len(c.origin) == 10{
+		c.cards.Score = c.pairBitMap[0] & ^2
+		return &c.cards
+	}
+	switch c.cards.Level {
+	case HighCard:
 		score := c.pairBitMap[0]
-		if c.cards.Level == HighCard {
 			score = score & ^2
 			score &= score - 1
 			score &= score - 1
-		}
 		c.cards.Score = score
-	}()
+	case DoubleOneCard:
+		c.cards.Score = c.pairBitMap[1] << 16
+		score := c.pairBitMap[0]
+		score = score & ^c.pairBitMap[1]
+		score = score & ^2
+		score &= score - 1
+		score &= score - 1
+		c.cards.Score += score
+	case DoubleTwoCard:
+		c.cards.Score = c.pairBitMap[1] << 16
+		score := c.pairBitMap[0]
+		score = score & ^c.pairBitMap[1]
+		score = score & ^2
+		score &= score - 1
+		score &= score - 1
+		c.cards.Score += score
+	}
+	return &c.cards
+}
+
+func (c *CardType) GetCard() *Cards {
+	defer  c.GetScore()
 	if c.flushColor != 0 && getConnBit(c.colorBitMap[c.flushColor-1]) >= 5{
 		if (^c.colorBitMap[c.flushColor-1] & (0x1F << (15-5))) == 0{
 			c.cards.Level = RoyalFlush
