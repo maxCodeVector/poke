@@ -59,7 +59,7 @@ func compareInEqualLevel(c1 *parse.Cards, c2 *parse.Cards) int {
 }
 
 func main() {
-	t := parse.LoadJsonFile("json/seven_cards_with_ghost.result.json", 1)
+	t := parse.LoadJsonFile("json/seven_cards.result.json", 1)
 	startTime := time.Now().UnixNano() //纳秒
 	var comparator BaseComparator
 	comparator = new(MapComparator)
