@@ -91,10 +91,10 @@ func thread(t *[]parse.Game, comparator *BaseComparator, start int, end int, fla
 		bobCard := parse.NewCardType(game.Bob)
 		res := (*comparator).compare(aliceCard.GetCard(), bobCard.GetCard())
 		if res != game.Result{
+			i++
+			//goto test
 			if aliceCard.GetCard().Level != bobCard.GetCard().Level{
 				panic("level has wrong")
-				//fmt.Printf("alice := \"%s\"\n", game.Alice)
-				//fmt.Printf("bob := \"%s\"\n", game.Bob)
 			}
 			if aliceCard.GetCard().Level == parse.HighCard{
 				fmt.Printf("alice := \"%s\"\n", game.Alice)
@@ -107,21 +107,21 @@ func thread(t *[]parse.Game, comparator *BaseComparator, start int, end int, fla
 				panic("2 card has wrong")
 			}
 			if aliceCard.GetCard().Level == parse.DoubleTwoCard{
-				//fmt.Printf("alice := \"%s\"\n", game.Alice)
-				//fmt.Printf("bob := \"%s\"\n", game.Bob)
-				//fmt.Printf("result: %d\n", game.Result)
-				//panic("22 card has wrong")
+				fmt.Printf("alice := \"%s\"\n", game.Alice)
+				fmt.Printf("bob := \"%s\"\n", game.Bob)
+				fmt.Printf("result: %d\n", game.Result)
+				panic("22 card has wrong")
 			}
 			if aliceCard.GetCard().Level == parse.ThreeCard{
-				//fmt.Printf("alice := \"%s\"\n", game.Alice)
-				//fmt.Printf("bob := \"%s\"\n", game.Bob)
-				//fmt.Printf("result: %d\n", game.Result)
-				panic("straight card has wrong")
+				fmt.Printf("alice := \"%s\"\n", game.Alice)
+				fmt.Printf("bob := \"%s\"\n", game.Bob)
+				fmt.Printf("result: %d\n", game.Result)
+				panic("3 card has wrong")
 			}
 			if aliceCard.GetCard().Level == parse.StraightCard{
-				//fmt.Printf("alice := \"%s\"\n", game.Alice)
-				//fmt.Printf("bob := \"%s\"\n", game.Bob)
-				//fmt.Printf("result: %d\n", game.Result)
+				fmt.Printf("alice := \"%s\"\n", game.Alice)
+				fmt.Printf("bob := \"%s\"\n", game.Bob)
+				fmt.Printf("result: %d\n", game.Result)
 				panic("straight card has wrong")
 			}
 			if aliceCard.GetCard().Level == parse.FlushCard{
@@ -131,10 +131,10 @@ func thread(t *[]parse.Game, comparator *BaseComparator, start int, end int, fla
 				panic("flush card has wrong")
 			}
 			if aliceCard.GetCard().Level == parse.GourdCard{
-				//fmt.Printf("alice := \"%s\"\n", game.Alice)
-				//fmt.Printf("bob := \"%s\"\n", game.Bob)
-				//fmt.Printf("result: %d\n", game.Result)
-				//panic("32 card has wrong")
+				fmt.Printf("alice := \"%s\"\n", game.Alice)
+				fmt.Printf("bob := \"%s\"\n", game.Bob)
+				fmt.Printf("result: %d\n", game.Result)
+				panic("32 card has wrong")
 			}
 			if aliceCard.GetCard().Level == parse.FourCard{
 				fmt.Printf("alice := \"%s\"\n", game.Alice)
@@ -143,18 +143,18 @@ func thread(t *[]parse.Game, comparator *BaseComparator, start int, end int, fla
 				panic("four card has wrong")
 			}
 			if aliceCard.GetCard().Level == parse.StraightFlush{
-				//fmt.Printf("alice := \"%s\"\n", game.Alice)
-				//fmt.Printf("bob := \"%s\"\n", game.Bob)
-				//fmt.Printf("result: %d\n", game.Result)
+				fmt.Printf("alice := \"%s\"\n", game.Alice)
+				fmt.Printf("bob := \"%s\"\n", game.Bob)
+				fmt.Printf("result: %d\n", game.Result)
 				panic("straightflush card has wrong")
 			}
 			if aliceCard.GetCard().Level == parse.RoyalFlush{
-				//fmt.Printf("alice := \"%s\"\n", game.Alice)
-				//fmt.Printf("bob := \"%s\"\n", game.Bob)
-				//fmt.Printf("result: %d\n", game.Result)
+				fmt.Printf("alice := \"%s\"\n", game.Alice)
+				fmt.Printf("bob := \"%s\"\n", game.Bob)
+				fmt.Printf("result: %d\n", game.Result)
 				panic("Rflush card has wrong")
 			}
-			i++
+			//test: i = i
 		}
 	}
 	fmt.Printf("%d fail\n", i)
