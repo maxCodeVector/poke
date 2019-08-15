@@ -62,3 +62,11 @@ func TestNewCardTypeSStraight(t *testing.T) {
 	level := NewCardType("Ad2s3s4sTd5s3h").GetCard().Level
 	assert.Equal(t, level, StraightCard)
 }
+
+func TestNewCardType5(t *testing.T) {
+	level := NewCardType("6s5h4c3s2c").GetCard().Level
+	assert.Equal(t, level, StraightCard)
+	level = NewCardType("As2h3s4c5s").GetCard().Level
+	assert.Equal(t, level, StraightCard)
+}
+
