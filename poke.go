@@ -59,7 +59,7 @@ func compareInEqualLevel(c1 *parse.Cards, c2 *parse.Cards) int {
 }
 
 func main() {
-	t := parse.LoadJsonFile("json/result.json", 1)
+	t := parse.LoadJsonFile("json/seven_cards_with_ghost.result.json", 1)
 	startTime := time.Now().UnixNano() //纳秒
 	var comparator BaseComparator
 	comparator = new(MapComparator)
@@ -92,7 +92,7 @@ func thread(t *[]parse.Game, comparator *BaseComparator, start int, end int, fla
 		res := (*comparator).compare(aliceCard.GetCard(), bobCard.GetCard())
 		if res != game.Result{
 			i++
-			//goto test
+			goto test
 			if aliceCard.Cards.Level != bobCard.Cards.Level{
 				panic("level has wrong")
 			}
@@ -154,7 +154,7 @@ func thread(t *[]parse.Game, comparator *BaseComparator, start int, end int, fla
 				fmt.Printf("result: %d\n", game.Result)
 				panic("Rflush card has wrong")
 			}
-			//test: i = i
+			test: i = i
 		}
 	}
 	fmt.Printf("%d fail\n", i)

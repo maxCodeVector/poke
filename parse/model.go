@@ -14,12 +14,17 @@ type CardType struct {
 	flushColor     int
 	Cards          Cards
 	origin         string
+	cheatNum	   int
 }
 
 func NewCardType(c string) *CardType {
 	var cardType CardType
 	cardType.origin = c
 	for x := 0; x < len(c); x += 2 {
+		if c[x] == 'X'{
+			cardType.cheatNum ++
+			continue
+		}
 		color := COLOR_TABLE[c[x+1]]
 		card := CARD_TABLE[c[x]]
 		i := 0

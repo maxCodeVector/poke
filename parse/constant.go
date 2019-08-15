@@ -22,6 +22,7 @@ var COLOR_TABLE = map[byte]int{
 	'h': 1,
 	'd': 2,
 	'c': 3,
+	'n': -1, //这是癞子
 }
 var CARD_TABLE = map[byte]int{
 	'2': 2,
@@ -37,5 +38,6 @@ var CARD_TABLE = map[byte]int{
 	'Q': 12,
 	'K': 13,
 	'A': 14,
+	'X': 15, //这是癞子
 }
 var SPECIAL_STAIGHT = []int{2, 3, 4, 5, 14}
