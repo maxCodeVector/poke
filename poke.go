@@ -138,7 +138,7 @@ func thread(t *[]parse.Game, comparator *BaseComparator, start int, end int, fla
 				fmt.Printf("result: %d\n", game.Result)
 				panic("flush card has wrong")
 			}
-			goto test
+			//goto test
 			if aliceCard.GetCard().Level == parse.GourdCard {
 				fmt.Printf("alice := \"%s\"\n", game.Alice)
 				fmt.Printf("bob := \"%s\"\n", game.Bob)

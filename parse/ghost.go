@@ -68,13 +68,22 @@ next:
 
 func DistToFour(c *CardType) int {
 	if c.Cards.Level == ThreeCard || c.Cards.Level == GourdCard {
+		highPos := GetHighestOneBit(c.pairBitMap[2])
+		c.pairBitMap[3] |= highPos
 		return 1
 	}
 	return UNREACHABLE
 }
 
 func DistToThreeTwo(c *CardType) int {
-	if c.Cards.Level == ThreeCard || c.Cards.Level == DoubleTwoCard {
+	if c.Cards.Level == ThreeCard {
+		c.pairBitMap[0] = c.pairBitMap[0] & ^c.pairBitMap[1]
+		highPos := GetHighestOneBit(c.pairBitMap[0])
+		c.pairBitMap[1] |= highPos
+		return 1
+	}else if c.Cards.Level == DoubleTwoCard {
+		highPos := GetHighestOneBit(c.pairBitMap[1])
+		c.pairBitMap[2] |= highPos
 		return 1
 	}
 	return UNREACHABLE
