@@ -36,7 +36,6 @@ type BaseComparator interface {
 type MapComparator struct {
 }
 
-
 func (m *MapComparator) compare(c1, c2 *parse.Cards) int {
 	if c1.Level > c2.Level {
 		return 1
@@ -59,7 +58,7 @@ func compareInEqualLevel(c1 *parse.Cards, c2 *parse.Cards) int {
 }
 
 func main() {
-	t := parse.LoadJsonFile("json/seven_cards.result.json", 1)
+	t := parse.LoadJsonFile("json/seven_cards_with_ghost.result.json", 1)
 	startTime := time.Now().UnixNano() //纳秒
 	var comparator BaseComparator
 	comparator = new(MapComparator)
@@ -90,74 +89,88 @@ func thread(t *[]parse.Game, comparator *BaseComparator, start int, end int, fla
 		aliceCard := parse.NewCardType(game.Alice)
 		bobCard := parse.NewCardType(game.Bob)
 		res := (*comparator).compare(aliceCard.GetCard(), bobCard.GetCard())
-		if res != game.Result{
+		if res != game.Result {
 			i++
-			goto test
-			if aliceCard.Cards.Level != bobCard.Cards.Level{
-				panic("level has wrong")
-			}
-			if aliceCard.GetCard().Level == parse.HighCard{
-				//fmt.Printf("alice := \"%s\"\n", game.Alice)
-				//fmt.Printf("bob := \"%s\"\n", game.Bob)
-				//panic("high card has wrong")
-			}
-			if aliceCard.GetCard().Level == parse.DoubleOneCard{
+			if aliceCard.Cards.Level != bobCard.Cards.Level {
 				fmt.Printf("alice := \"%s\"\n", game.Alice)
 				fmt.Printf("bob := \"%s\"\n", game.Bob)
+				fmt.Printf("result: %d\n", game.Result)
+				panic("level has wrong")
+			}
+			if aliceCard.GetCard().Level == parse.HighCard {
+				fmt.Printf("alice := \"%s\"\n", game.Alice)
+				fmt.Printf("bob := \"%s\"\n", game.Bob)
+				fmt.Printf("result: %d\n", game.Result)
+				panic("high card has wrong")
+			}
+			//goto test
+			if aliceCard.GetCard().Level == parse.DoubleOneCard {
+				fmt.Printf("alice := \"%s\"\n", game.Alice)
+				fmt.Printf("bob := \"%s\"\n", game.Bob)
+				fmt.Printf("result: %d\n", game.Result)
 				panic("2 card has wrong")
 			}
-			if aliceCard.GetCard().Level == parse.DoubleTwoCard{
+			//goto test
+			if aliceCard.GetCard().Level == parse.DoubleTwoCard {
 				fmt.Printf("alice := \"%s\"\n", game.Alice)
 				fmt.Printf("bob := \"%s\"\n", game.Bob)
 				fmt.Printf("result: %d\n", game.Result)
 				panic("22 card has wrong")
 			}
-			if aliceCard.GetCard().Level == parse.ThreeCard{
+			//goto test
+			if aliceCard.GetCard().Level == parse.ThreeCard {
 				fmt.Printf("alice := \"%s\"\n", game.Alice)
 				fmt.Printf("bob := \"%s\"\n", game.Bob)
 				fmt.Printf("result: %d\n", game.Result)
 				panic("3 card has wrong")
 			}
-			if aliceCard.GetCard().Level == parse.StraightCard{
+			//goto test
+			if aliceCard.GetCard().Level == parse.StraightCard {
 				fmt.Printf("alice := \"%s\"\n", game.Alice)
 				fmt.Printf("bob := \"%s\"\n", game.Bob)
 				fmt.Printf("result: %d\n", game.Result)
-				//panic("straight card has wrong")
+				panic("straight card has wrong")
 			}
-			if aliceCard.GetCard().Level == parse.FlushCard{
+			//goto test
+			if aliceCard.GetCard().Level == parse.FlushCard {
 				fmt.Printf("alice := \"%s\"\n", game.Alice)
 				fmt.Printf("bob := \"%s\"\n", game.Bob)
 				fmt.Printf("result: %d\n", game.Result)
 				panic("flush card has wrong")
 			}
-			if aliceCard.GetCard().Level == parse.GourdCard{
+			goto test
+			if aliceCard.GetCard().Level == parse.GourdCard {
 				fmt.Printf("alice := \"%s\"\n", game.Alice)
 				fmt.Printf("bob := \"%s\"\n", game.Bob)
 				fmt.Printf("result: %d\n", game.Result)
 				panic("32 card has wrong")
 			}
-			if aliceCard.GetCard().Level == parse.FourCard{
+			//goto test
+			if aliceCard.GetCard().Level == parse.FourCard {
 				fmt.Printf("alice := \"%s\"\n", game.Alice)
 				fmt.Printf("bob := \"%s\"\n", game.Bob)
 				fmt.Printf("result: %d\n", game.Result)
 				panic("four card has wrong")
 			}
-			if aliceCard.GetCard().Level == parse.StraightFlush{
+			//goto test
+			if aliceCard.GetCard().Level == parse.StraightFlush {
 				fmt.Printf("alice := \"%s\"\n", game.Alice)
 				fmt.Printf("bob := \"%s\"\n", game.Bob)
 				fmt.Printf("result: %d\n", game.Result)
 				panic("straightflush card has wrong")
 			}
-			if aliceCard.GetCard().Level == parse.RoyalFlush{
+			//goto test
+			if aliceCard.GetCard().Level == parse.RoyalFlush {
 				fmt.Printf("alice := \"%s\"\n", game.Alice)
 				fmt.Printf("bob := \"%s\"\n", game.Bob)
 				fmt.Printf("result: %d\n", game.Result)
 				panic("Rflush card has wrong")
 			}
-			test: i = i
+			goto test
+		test:
+			i = i
 		}
 	}
 	fmt.Printf("%d fail\n", i)
 	flag <- 1
 }
-

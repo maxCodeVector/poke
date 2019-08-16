@@ -14,35 +14,35 @@ type CardType struct {
 	flushColor     int
 	Cards          Cards
 	origin         string
-	cheatNum	   int
+	cheatNum       int
 }
 
 func NewCardType(c string) *CardType {
 	var cardType CardType
 	cardType.origin = c
 	for x := 0; x < len(c); x += 2 {
-		if c[x] == 'X'{
-			cardType.cheatNum ++
+		if c[x] == 'X' {
+			cardType.cheatNum++
 			continue
 		}
 		color := COLOR_TABLE[c[x+1]]
-		card := CARD_TABLE[c[x]]
+		cardMinusOne := CARD_TABLE[c[x]] - 1
 		i := 0
 		for {
-			if cardType.pairBitMap[i]&(1<<uint(card)) == 0 {
-				cardType.pairBitMap[i] |= 1 << uint(card)
+			if cardType.pairBitMap[i]&(1<<uint(cardMinusOne)) == 0 {
+				cardType.pairBitMap[i] |= 1 << uint(cardMinusOne)
 				break
 			}
 			i++
 		}
-		cardType.colorBitMap[color] |= 1 << uint(card)
+		cardType.colorBitMap[color] |= 1 << uint(cardMinusOne)
 		cardType.colorBitMapLen[color] ++
 		if cardType.colorBitMapLen[color] >= 5 {
 			cardType.flushColor = color + 1
 		}
-		if card == CARD_TABLE['A'] {
-			cardType.pairBitMap[0] |= 2
-			cardType.colorBitMap[color] |= 2
+		if cardMinusOne == CARD_TABLE['A']-1 {
+			cardType.pairBitMap[0] |= 1
+			cardType.colorBitMap[color] |= 1
 		}
 	}
 	cardType.Cards.CardType = &cardType
@@ -89,16 +89,16 @@ func (c *CardType) GetScore() *Cards {
 }
 
 func (c *CardType) getScoreOf5Cards() *Cards {
-	c.pairBitMap[0] &= ^2
+	c.pairBitMap[0] &= ^1
 	switch c.Cards.Level {
 	case HighCard:
-		c.Cards.Score = c.pairBitMap[0] & ^2
+		c.Cards.Score = c.pairBitMap[0] & ^1
 	case DoubleOneCard, DoubleTwoCard:
 		c.Cards.Score = (c.pairBitMap[1] << 16) + c.pairBitMap[0] & ^c.pairBitMap[1]
 	case ThreeCard:
 		c.Cards.Score = (c.pairBitMap[2] << 16) + c.pairBitMap[0] & ^c.pairBitMap[2]
 	case FlushCard:
-		c.Cards.Score = c.colorBitMap[c.flushColor-1] & ^2
+		c.Cards.Score = c.colorBitMap[c.flushColor-1] & ^1
 	case GourdCard:
 		threeNum := c.pairBitMap[2]
 		// got 3 Cards
@@ -117,7 +117,7 @@ func (c *CardType) getScoreOf7Cards() *Cards {
 	switch c.Cards.Level {
 	case HighCard:
 		score := c.pairBitMap[0]
-		score = score & ^2
+		score = score & ^1
 		score &= score - 1
 		score &= score - 1
 		c.Cards.Score = score
@@ -125,19 +125,19 @@ func (c *CardType) getScoreOf7Cards() *Cards {
 		c.Cards.Score = c.pairBitMap[1] << 16
 		score := c.pairBitMap[0]
 		score = score & ^c.pairBitMap[1]
-		score = score & ^2
+		score = score & ^1
 		score &= score - 1
 		score &= score - 1
 		c.Cards.Score += score
 	case DoubleTwoCard:
 		twoNum := c.pairBitMap[1]
-		if getOneBitNumber(twoNum) == 3{
+		if getOneBitNumber(twoNum) == 3 {
 			twoNum &= twoNum - 1
 		}
 		// got 4 Cards
 		oneNum := c.pairBitMap[0] & ^twoNum
 		for {
-			if getOneBitNumber(oneNum) <= 1{
+			if getOneBitNumber(oneNum) <= 1 {
 				break
 			}
 			oneNum &= oneNum - 1
@@ -147,7 +147,7 @@ func (c *CardType) getScoreOf7Cards() *Cards {
 		threeNum := c.pairBitMap[2]
 		oneNum := c.pairBitMap[0] & ^threeNum
 		for {
-			if getOneBitNumber(oneNum) <= 2{
+			if getOneBitNumber(oneNum) <= 2 {
 				break
 			}
 			oneNum &= oneNum - 1
@@ -155,7 +155,7 @@ func (c *CardType) getScoreOf7Cards() *Cards {
 		c.Cards.Score = (threeNum << 16) + oneNum
 	case FlushCard:
 		score := c.colorBitMap[c.flushColor-1]
-		score = score & ^2
+		score = score & ^1
 		numFlushCard := c.colorBitMapLen[c.flushColor-1]
 		for {
 			if numFlushCard <= 5 {
@@ -167,12 +167,12 @@ func (c *CardType) getScoreOf7Cards() *Cards {
 		c.Cards.Score = score
 	case GourdCard:
 		threeNum := c.pairBitMap[2]
-		if getOneBitNumber(threeNum) == 2{
+		if getOneBitNumber(threeNum) == 2 {
 			threeNum &= threeNum - 1
 		}
 		// got 3 Cards
 		twoNum := c.pairBitMap[1] & ^threeNum
-		if getOneBitNumber(twoNum) == 2{
+		if getOneBitNumber(twoNum) == 2 {
 			twoNum &= twoNum - 1
 		}
 		c.Cards.Score = (threeNum << 16) + twoNum
@@ -180,7 +180,7 @@ func (c *CardType) getScoreOf7Cards() *Cards {
 		fourNum := c.pairBitMap[3]
 		oneNum := c.pairBitMap[0] & ^fourNum
 		for {
-			if getOneBitNumber(oneNum) <= 1{
+			if getOneBitNumber(oneNum) <= 1 {
 				break
 			}
 			oneNum &= oneNum - 1
@@ -191,12 +191,33 @@ func (c *CardType) getScoreOf7Cards() *Cards {
 	return &c.Cards
 }
 
+func (c *CardType) GetGhostCard() *Cards {
+	ghost := NewGhost()
+	var level int
+	for x := len(ghost.GhostTable) - 1; x > 0; x-- {
+		if ghost.GhostTable[x] == nil {
+			continue
+		}
+		if c.Cards.Level > x{
+			break
+		}
+		if ghost.GhostTable[x](c) <= c.cheatNum { // todo , need to consider equal case
+			level = x
+			break
+		}
+	}
+	if level != 0 {
+		c.Cards.Level = level
+	}
+	return &c.Cards
+}
+
 func (c *CardType) GetCard() *Cards {
 	//defer  c.GetScore()
 	if c.flushColor != 0 {
-		maxBitPos := getConnBit(c.colorBitMap[c.flushColor-1])
+		maxBitPos := getConnBit(c.colorBitMap[c.flushColor-1]) // todo change the minBitPos to adapt ghost
 		if maxBitPos != 0 {
-			if (^c.colorBitMap[c.flushColor-1] & (0x1F << (15 - 5))) == 0 {
+			if (^c.colorBitMap[c.flushColor-1] & (0x1F << (14 - 5))) == 0 {
 				c.Cards.Level = RoyalFlush
 			} else {
 				c.Cards.Level = StraightFlush
@@ -234,6 +255,9 @@ func (c *CardType) GetCard() *Cards {
 		} else {
 			c.Cards.Level = HighCard
 		}
+	}
+	if c.cheatNum != 0 {
+		return c.GetGhostCard()
 	}
 	return &c.Cards
 }
