@@ -82,8 +82,8 @@ func TestGhost31(t *testing.T) {
 }
 
 func TestGhostScoreTypeFlush_1(t *testing.T) {
-	alice := "5dXnKd7d6d6sQc"
-	bob := "5c2d5dXnKd7d6d"
+	alice := "Ac6h2cXnTcKhQd"
+	bob := "Ts8sAc6h2cXnTc"
 	aliceScore := NewCardType(alice).GetCard().CardType.GetScore()
 	bobScore := NewCardType(bob).GetCard().CardType.GetScore()
 	assert.Equal(t, aliceScore.Score == bobScore.Score, true)

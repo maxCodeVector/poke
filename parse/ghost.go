@@ -20,7 +20,7 @@ func GetHighestOneBit(num int) int {
 	i |= i >> 2
 	i |= i >> 4
 	i |= i >> 8
-	i |= i >> 16
+	//i |= i >> 16
 	return i ^ (i >> 1)
 }
 
@@ -44,26 +44,29 @@ func DistToRoyalFlush(c *CardType) int {
 }
 
 func DistToStraightFlush(c *CardType) int {
+	res := UNREACHABLE
 	var oneNumBitMap int
+	var numOfBits int
 	for i, colorNum := range c.colorBitMapLen {
 		if colorNum >= 4 {
 			oneNumBitMap = c.colorBitMap[i]
+			numOfBits = oneNumBitMap&1 + c.colorBitMapLen[i]
 			goto next
 		}
 	}
-	return UNREACHABLE
+	return res
 next:
-	for numOfBits := getOneBitNumber(oneNumBitMap); numOfBits >= 4; numOfBits-- {
+	for ; numOfBits >= 4; numOfBits-- {
 		lastBitPos := GetLastBitPos(oneNumBitMap)
 		fiveLastBitPos := (lastBitPos << 1) + lastBitPos
 		fiveLastBitPos = (fiveLastBitPos << 3) + fiveLastBitPos + (lastBitPos << 2)
 		if getOneBitNumber(fiveLastBitPos&oneNumBitMap) >= 4 {
 			c.Cards.Score = lastBitPos << 4
-			return 1
+			res = 1
 		}
 		oneNumBitMap &= oneNumBitMap - 1
 	}
-	return UNREACHABLE
+	return res
 }
 
 func DistToFour(c *CardType) int {
@@ -76,12 +79,8 @@ func DistToFour(c *CardType) int {
 }
 
 func DistToThreeTwo(c *CardType) int {
-	if c.Cards.Level == ThreeCard {
-		c.pairBitMap[0] = c.pairBitMap[0] & ^c.pairBitMap[1]
-		highPos := GetHighestOneBit(c.pairBitMap[0])
-		c.pairBitMap[1] |= highPos
-		return 1
-	}else if c.Cards.Level == DoubleTwoCard {
+	//ThreeCard is impossible
+	if c.Cards.Level == DoubleTwoCard {
 		highPos := GetHighestOneBit(c.pairBitMap[1])
 		c.pairBitMap[2] |= highPos
 		return 1
@@ -104,7 +103,8 @@ func DistToFlush(c *CardType) int {
 func DistToStraight(c *CardType) int {
 	res := UNREACHABLE
 	oneNumBitMap := c.pairBitMap[0]
-	for numOfBits := getOneBitNumber(oneNumBitMap); numOfBits >= 4; numOfBits-- {
+	var numOfBits = oneNumBitMap & 1
+	for numOfBits += c.pairBitMapLen[0]; numOfBits >= 4; numOfBits-- {
 		lastBitPos := GetLastBitPos(oneNumBitMap)
 		fiveLastBitPos := (lastBitPos << 1) + lastBitPos
 		fiveLastBitPos = (fiveLastBitPos << 3) + fiveLastBitPos + (lastBitPos << 2)
@@ -119,8 +119,8 @@ func DistToStraight(c *CardType) int {
 
 func DistToThreeOne(c *CardType) int {
 	if c.Cards.Level == DoubleOneCard {
-		highPos := GetHighestOneBit(c.pairBitMap[1])
-		c.pairBitMap[2] |= highPos
+		//highPos := GetHighestOneBit(c.pairBitMap[1])
+		c.pairBitMap[2] |= c.pairBitMap[1]
 		return 1
 	}
 	return UNREACHABLE
@@ -128,6 +128,7 @@ func DistToThreeOne(c *CardType) int {
 
 func DistToDoubleTwoCard(c *CardType) int {
 	if c.Cards.Level == DoubleOneCard {
+		// impossible
 		return 1
 	}
 	return UNREACHABLE
