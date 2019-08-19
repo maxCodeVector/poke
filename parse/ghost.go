@@ -24,8 +24,14 @@ func GetHighestOneBit(num int) int {
 	return i ^ (i >> 1)
 }
 
-func NewGhost() *Ghost {
-	ghost := Ghost{}
+
+var ghost = Ghost{}
+
+func NewGhost() *Ghost  {
+	return &ghost
+}
+
+func init() {
 	ghost.GhostTable[RoyalFlush] = DistToRoyalFlush
 	ghost.GhostTable[StraightFlush] = DistToStraightFlush
 	ghost.GhostTable[FourCard] = DistToFour
@@ -36,7 +42,6 @@ func NewGhost() *Ghost {
 	ghost.GhostTable[DoubleTwoCard] = DistToDoubleTwoCard
 	ghost.GhostTable[DoubleOneCard] = DistToDoubleOneCard
 	ghost.GhostTable[HighCard] = DistToHightCard
-	return &ghost
 }
 
 func DistToRoyalFlush(c *CardType) int {

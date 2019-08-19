@@ -62,23 +62,36 @@ func main() {
 	startTime := time.Now().UnixNano() //纳秒
 	var comparator BaseComparator
 	comparator = new(MapComparator)
-	const threadNum = 1
-	runtime.GOMAXPROCS(threadNum)
+	var hasThread bool
+	//hasThread = true
+	if hasThread {
+		usingThreads(t, &comparator, 4)
+	}else {
+		for _, game := range *t {
+			aliceCard := parse.NewCardType(game.Alice)
+			bobCard := parse.NewCardType(game.Bob)
+			res := comparator.compare(aliceCard.GetCard(), bobCard.GetCard())
+			if res != game.Result {
+				panic("result false")
+			}
+		}
+	}
+	fmt.Printf("cards %d, go thread: %d\n", len(*t), (time.Now().UnixNano()-startTime)/1000000)
+	fmt.Printf("Are you happy?\n")
+}
 
-	var flags [threadNum]chan int
+func usingThreads(t *[]parse.Game, comparator *BaseComparator, threadNum int) {
+	runtime.GOMAXPROCS(threadNum)
+	var flags = make([]chan int, threadNum)
 	for x := 0; x < threadNum; x++ {
 		flags[x] = make(chan int)
 		start := x * len(*t) / threadNum
 		end := min2int(start+len(*t)/threadNum, len(*t))
-		go thread(t, &comparator, start, end, flags[x])
+		go thread(t, comparator, start, end, flags[x])
 	}
 	for x := 0; x < threadNum; x++ {
 		<-flags[x]
 	}
-
-	fmt.Printf("cards %d, go thread: %d\n", len(*t), (time.Now().UnixNano()-startTime)/1000000)
-	fmt.Printf("Are you happy?\n")
-
 }
 
 func thread(t *[]parse.Game, comparator *BaseComparator, start int, end int, flag chan int) {
