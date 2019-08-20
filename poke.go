@@ -58,14 +58,15 @@ func compareInEqualLevel(c1 *parse.Cards, c2 *parse.Cards) int {
 }
 
 func main() {
+//	startTime := time.Now().UnixNano()
 	t := parse.LoadJsonFile("json/seven_cards_with_ghost.result.json", 1)
 	startTime := time.Now().UnixNano() //纳秒
 	var comparator BaseComparator
 	comparator = new(MapComparator)
 	var hasThread bool
-	//hasThread = true
+	hasThread = true
 	if hasThread {
-		usingThreads(t, &comparator, 4)
+		usingThreads(t, &comparator, 8)
 	}else {
 		for _, game := range *t {
 			aliceCard := parse.NewCardType(game.Alice)

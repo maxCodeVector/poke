@@ -23,14 +23,16 @@ func LoadJsonFile(fileName string, rep int) *[] Game {
 		panic("path error")
 	}
 	var record Record
-	record.Matches = make([]Game, 0, 10000*rep)
+	record.Matches = make([]Game, 0, 10100*rep)
 	err = json.Unmarshal(data, &record)
 	if err != nil {
 		panic("format error")
 	}
-	tempS := record.Matches
-	for x := 1; x < rep; x++ {
-		record.Matches = append(record.Matches, tempS...)
+	if rep > 1{
+		tempS := record.Matches
+		for x := 1; x < rep; x++ {
+			record.Matches = append(record.Matches, tempS...)
+		}
 	}
 	return &record.Matches
 }
