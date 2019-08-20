@@ -64,7 +64,7 @@ func main() {
 	var comparator BaseComparator
 	comparator = new(MapComparator)
 	var hasThread bool
-	hasThread = true
+	//hasThread = true
 	if hasThread {
 		usingThreads(t, &comparator, 8)
 	}else {
