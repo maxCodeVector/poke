@@ -52,15 +52,23 @@ func NewCardType(c string) *CardType {
 }
 
 func getOneBitNumber(x int) int {
-	countx := 0
-	for {
-		if x == 0 {
-			break
-		}
-		countx++
-		x = x & (x - 1)
-	}
-	return countx
+	// 统计bit位1的个数（最大有效位数为16位）
+	// 这里用了分治思想：先将相邻两个比特位１的个数相加，再将相邻四各比特位值相加...
+	a := x
+	a = ((a & 0xAAAA) >> 1) + (a & 0x5555) // 1010101010101010  0101010101010101
+	a = ((a & 0xCCCC) >> 2) + (a & 0x3333) // 1100110011001100  0011001100110011
+	a = ((a & 0xF0F0) >> 4) + (a & 0x0F0F) // 1111000011110000  0000111100001111
+	a = ((a & 0xFF00) >> 8) + (a & 0x00FF) // 1111111100000000  0000000011111111
+	return a
+	//countx := 0
+	//for {
+	//	if x == 0 {
+	//		break
+	//	}
+	//	countx++
+	//	x = x & (x - 1)
+	//}
+	//return countx
 }
 
 func getConnBit(cardMap int) int {
