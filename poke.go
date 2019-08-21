@@ -59,26 +59,35 @@ func compareInEqualLevel(c1 *parse.Cards, c2 *parse.Cards) int {
 
 func main() {
 //	startTime := time.Now().UnixNano()
-	t := parse.LoadJsonFile("json/seven_cards_with_ghost.result.json", 1)
-	startTime := time.Now().UnixNano() //纳秒
+	sevenGhost := parse.LoadJsonFile("json/seven_cards_with_ghost.result.json", 1)
+	fiveNoGhost := parse.LoadJsonFile("json/result.json", 1)
 	var comparator BaseComparator
 	comparator = new(MapComparator)
 	var hasThread bool
 	//hasThread = true
 	if hasThread {
-		usingThreads(t, &comparator, 8)
+		usingThreads(sevenGhost, &comparator, 8)
 	}else {
-		for _, game := range *t {
-			aliceCard := parse.NewCardType(game.Alice)
-			bobCard := parse.NewCardType(game.Bob)
-			res := comparator.compare(aliceCard.GetCard(), bobCard.GetCard())
-			if res != game.Result {
-				panic("result false")
-			}
+		fmt.Printf("\nfive without ghost\n")
+		executeJudge(fiveNoGhost, comparator)
+
+		fmt.Printf("\nseven with ghost\n")
+		executeJudge(sevenGhost, comparator)
+	}
+	fmt.Printf("Are you happy?\n")
+}
+
+func executeJudge(t *[]parse.Game, comparator BaseComparator) {
+	startTime := time.Now().UnixNano() //纳秒
+	for _, game := range *t {
+		aliceCard := parse.NewCardType(game.Alice)
+		bobCard := parse.NewCardType(game.Bob)
+		res := comparator.compare(aliceCard.GetCard(), bobCard.GetCard())
+		if res != game.Result {
+			panic("result false")
 		}
 	}
-	fmt.Printf("cards %d, go thread: %d\n", len(*t), (time.Now().UnixNano()-startTime)/1000000)
-	fmt.Printf("Are you happy?\n")
+	fmt.Printf("cards %d, time: %f ms\n", len(*t), float64(time.Now().UnixNano()-startTime)/1000000)
 }
 
 func usingThreads(t *[]parse.Game, comparator *BaseComparator, threadNum int) {
