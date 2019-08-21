@@ -26,8 +26,8 @@ func NewCardType(c string) *CardType {
 			cardType.cheatNum++
 			continue
 		}
-		color := COLOR_TABLE[c[x+1]]
-		cardMinusOne := CARD_TABLE[c[x]] - 1
+		color := TAG_TABLE[c[x+1]]
+		cardMinusOne := TAG_TABLE[c[x]] - 1
 		i := 0
 		for {
 			if cardType.pairBitMap[i]&(1<<uint(cardMinusOne)) == 0 {
@@ -42,7 +42,7 @@ func NewCardType(c string) *CardType {
 		if cardType.colorBitMapLen[color] >= 5 {
 			cardType.flushColor = color + 1
 		}
-		if cardMinusOne == CARD_TABLE['A']-1 {
+		if cardMinusOne == TAG_TABLE['A']-1 {
 			cardType.pairBitMap[0] |= 1
 			cardType.colorBitMap[color] |= 1
 		}

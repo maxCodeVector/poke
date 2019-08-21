@@ -1,7 +1,5 @@
 package parse
 
-import "math"
-
 const (
 	HighCard      = 1  // 高牌
 	DoubleOneCard = 2  // 一对
@@ -13,31 +11,30 @@ const (
 	FourCard      = 8  // 四条
 	StraightFlush = 9 // 同花顺
 	RoyalFlush    = 10 // 皇家同花顺
-	CARD_BIT      = 16
 )
 
-var CARD_A_PART = 14 * int(math.Pow(16, 4))
-var COLOR_TABLE = map[byte]int{
-	's': 0,
-	'h': 1,
-	'd': 2,
-	'c': 3,
-	'n': -1, //这是癞子
+
+var TAG_TABLE [128]int
+
+func init()  {
+	TAG_TABLE['s'] = 0
+	TAG_TABLE['h'] = 1
+	TAG_TABLE['d'] = 2
+	TAG_TABLE['c'] = 3
+	TAG_TABLE['n'] = -1
+
+	TAG_TABLE['2'] = 2
+	TAG_TABLE['3'] = 3
+	TAG_TABLE['4'] = 4
+	TAG_TABLE['5'] = 5
+	TAG_TABLE['6'] = 6
+	TAG_TABLE['7'] = 7
+	TAG_TABLE['8'] = 8
+	TAG_TABLE['9'] = 9
+	TAG_TABLE['T'] = 10
+	TAG_TABLE['J'] = 11
+	TAG_TABLE['Q'] = 12
+	TAG_TABLE['K'] = 13
+	TAG_TABLE['A'] = 14
+	TAG_TABLE['X'] = 15
 }
-var CARD_TABLE = map[byte]int{
-	'2': 2,
-	'3': 3,
-	'4': 4,
-	'5': 5,
-	'6': 6,
-	'7': 7,
-	'8': 8,
-	'9': 9,
-	'T': 10,
-	'J': 11,
-	'Q': 12,
-	'K': 13,
-	'A': 14,
-	'X': 15, //这是癞子
-}
-var SPECIAL_STAIGHT = []int{2, 3, 4, 5, 14}
