@@ -3,4 +3,4 @@
 This is a program that help comparing two Texas poker.
 
 
-It support 5 cards, 7 cards with or without Laizi.
+It support 5 cards, 7 cards with or without ghost.
